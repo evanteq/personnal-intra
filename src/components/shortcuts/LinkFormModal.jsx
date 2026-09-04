@@ -24,6 +24,31 @@ export default function LinkFormModal({ open, initial, categories, defaultCatego
 
   if (!open) return null
 
+  if (categories.length === 0) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+        style={{ backgroundColor: 'var(--scrim)' }}
+        onClick={onClose}
+      >
+        <div
+          className="w-full max-w-sm rounded-2xl glass p-6 shadow-[var(--shadow-lg)] text-center"
+          style={{ backgroundColor: 'var(--modal-bg)' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Créez d'abord une catégorie</h2>
+          <p className="text-sm text-[var(--text-muted)] mb-5">
+            Il vous faut au moins une catégorie avant de pouvoir ajouter un lien. Utilisez le bouton "+ Catégorie"
+            au-dessus de la grille.
+          </p>
+          <button type="button" onClick={onClose} className="btn-accent px-4 py-2 rounded-lg text-sm font-medium">
+            Compris
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   function handleSubmit(e) {
     e.preventDefault()
     const title = form.title.trim()
