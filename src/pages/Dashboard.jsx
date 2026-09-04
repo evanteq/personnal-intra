@@ -1,4 +1,4 @@
-import { ArrowRight, CircleCheck, Kanban, Link2, ListTodo, NotebookPen } from 'lucide-react'
+import { ArrowRight, CircleCheck, Link2, ListTodo, NotebookPen } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DEFAULT_LINKS, DEFAULT_NOTES, DEFAULT_TODOS } from '../data/defaultData'
 import { getIcon } from '../data/iconOptions'
@@ -6,6 +6,8 @@ import { getFaviconUrl } from '../utils/favicon'
 import TodayPanel from '../components/dashboard/TodayPanel'
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+
+const QUICK_LINK_COUNT = 8
 
 function normalizeStatus(todo) {
   if (todo.status) return todo.status
@@ -24,9 +26,9 @@ function Stat({ icon: Icon, value, label }) {
   )
 }
 
-function SectionCard({ title, onSeeAll, children }) {
+function SectionCard({ title, onSeeAll, children, className = '' }) {
   return (
-    <div className="glass glass-shadow rounded-2xl p-5 flex flex-col gap-3 min-h-0">
+    <div className={`glass glass-shadow rounded-2xl p-5 flex flex-col gap-3 min-h-0 h-full ${className}`}>
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
         <button
@@ -55,8 +57,9 @@ export default function Dashboard({ onNavigate }) {
   const doingCount = todos.filter((t) => t.status === 'doing').length
   const doneCount = todos.filter((t) => t.status === 'done').length
 
-  const quickLinks = [...links].sort((a, b) => a.order - b.order).slice(0, 6)
-  const pendingTasks = todos.filter((t) => t.status !== 'done').slice(0, 5)
+  const sortedLinks = [...links].sort((a, b) => a.order - b.order)
+  const quickLinks = sortedLinks.slice(0, QUICK_LINK_COUNT)
+  const placeholderCount = Math.max(0, QUICK_LINK_COUNT - quickLinks.length)
   const latestNote = [...notes].sort((a, b) => b.updatedAt - a.updatedAt)[0]
 
   return (
@@ -70,9 +73,9 @@ export default function Dashboard({ onNavigate }) {
         <Stat icon={CircleCheck} value={doneCount} label="Tâches terminées" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-4 flex-1 min-h-0">
         <SectionCard title="Raccourcis rapides" onSeeAll={() => onNavigate('shortcuts')}>
-          <div className="grid grid-cols-3 gap-1">
+          <div className="grid grid-cols-4 gap-1 content-start flex-1">
             {quickLinks.map((link) => {
               const Icon = getIcon(link.icon)
               const faviconUrl = !link.icon ? getFaviconUrl(link.url) : null
@@ -101,48 +104,39 @@ export default function Dashboard({ onNavigate }) {
                 </a>
               )
             })}
-            {quickLinks.length === 0 && (
-              <p className="col-span-3 text-xs text-[var(--text-faint)] text-center py-4">Aucun raccourci pour le moment</p>
-            )}
+            {Array.from({ length: placeholderCount }).map((_, i) => (
+              <button
+                key={`placeholder-${i}`}
+                type="button"
+                onClick={() => onNavigate('shortcuts')}
+                className="flex flex-col items-center justify-center gap-1.5 rounded-xl p-2.5 border border-dashed border-[var(--surface-border)] text-[var(--text-faint)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/60 transition-colors"
+                title="Ajouter un raccourci"
+              >
+                <span className="flex items-center justify-center w-9 h-9 rounded-lg text-lg leading-none">+</span>
+                <span className="text-[11px]">Ajouter</span>
+              </button>
+            ))}
           </div>
         </SectionCard>
 
-        <SectionCard title="Tâches à faire" onSeeAll={() => onNavigate('todo')}>
-          <ul className="flex flex-col gap-1.5">
-            {pendingTasks.map((task) => (
-              <li key={task.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[var(--surface-hover)]">
-                <Kanban size={13} className="text-[var(--text-faint)] shrink-0" />
-                <span className="flex-1 min-w-0 text-sm text-[var(--text-primary)] truncate">{task.text}</span>
-                <span
-                  className="text-[10px] px-1.5 py-0.5 rounded-full text-[var(--text-muted)] shrink-0"
-                  style={{ backgroundColor: 'var(--surface-bg)' }}
-                >
-                  {task.status === 'doing' ? 'En cours' : 'À faire'}
+        <SectionCard title="Dernière note" onSeeAll={() => onNavigate('notes')}>
+          {latestNote ? (
+            <div className="flex-1 min-h-0 flex flex-col">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-[var(--text-primary)]">{latestNote.title || 'Sans titre'}</p>
+                <span className="text-[11px] text-[var(--text-faint)] shrink-0 ml-2">
+                  {dateFormatter.format(latestNote.updatedAt)}
                 </span>
-              </li>
-            ))}
-            {pendingTasks.length === 0 && (
-              <p className="text-xs text-[var(--text-faint)] text-center py-4">Tout est terminé 🎉</p>
-            )}
-          </ul>
+              </div>
+              <p className="text-sm text-[var(--text-muted)] mt-2 whitespace-pre-wrap line-clamp-[10] overflow-hidden">
+                {latestNote.content || 'Note vide.'}
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-[var(--text-faint)] text-center py-4">Aucune note pour le moment</p>
+          )}
         </SectionCard>
       </div>
-
-      <SectionCard title="Dernière note" onSeeAll={() => onNavigate('notes')}>
-        {latestNote ? (
-          <div>
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-[var(--text-primary)]">{latestNote.title || 'Sans titre'}</p>
-              <span className="text-[11px] text-[var(--text-faint)]">{dateFormatter.format(latestNote.updatedAt)}</span>
-            </div>
-            <p className="text-sm text-[var(--text-muted)] mt-1 line-clamp-2">
-              {latestNote.content || 'Note vide.'}
-            </p>
-          </div>
-        ) : (
-          <p className="text-xs text-[var(--text-faint)] text-center py-4">Aucune note pour le moment</p>
-        )}
-      </SectionCard>
     </div>
   )
 }
