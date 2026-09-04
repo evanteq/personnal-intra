@@ -6,29 +6,12 @@ import { getFaviconUrl } from '../utils/favicon'
 import TimezoneBanner from '../components/dashboard/TimezoneBanner'
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-const fullDateFormatter = new Intl.DateTimeFormat('fr-FR', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-})
 
 const QUICK_LINK_COUNT = 25
 
 function normalizeStatus(todo) {
   if (todo.status) return todo.status
   return todo.done ? 'done' : 'todo'
-}
-
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
-
-function getGreeting() {
-  const h = new Date().getHours()
-  if (h < 12) return 'Bonjour'
-  if (h < 18) return 'Bon après-midi'
-  return 'Bonsoir'
 }
 
 function Stat({ icon: Icon, value, label }) {
@@ -81,11 +64,6 @@ export default function Dashboard({ onNavigate }) {
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0 overflow-y-auto thin-scroll pr-1">
-      <div>
-        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">{getGreeting()}</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-0.5">{capitalize(fullDateFormatter.format(new Date()))}</p>
-      </div>
-
       <TimezoneBanner />
 
       <div className="glass glass-shadow rounded-2xl flex flex-wrap divide-x divide-[var(--surface-border)]">
