@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Loader2, LocateFixed, Moon, Search, Sun, X } from 'lucide-react'
+import { Loader2, LocateFixed, Moon, RotateCcw, Search, Sun, X } from 'lucide-react'
 import { useSettings } from '../../context/SettingsContext'
 import AccentColorPicker from './AccentColorPicker'
 import BackgroundPicker from './BackgroundPicker'
@@ -9,6 +9,19 @@ export default function SettingsPanel({ open, onClose }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
+  const [confirmingReset, setConfirmingReset] = useState(false)
+
+  function handleReset() {
+    if (!confirmingReset) {
+      setConfirmingReset(true)
+      setTimeout(() => setConfirmingReset(false), 3000)
+      return
+    }
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith('intra:'))
+      .forEach((key) => localStorage.removeItem(key))
+    window.location.reload()
+  }
 
   async function handleSearch(e) {
     e.preventDefault()
@@ -144,6 +157,25 @@ export default function SettingsPanel({ open, onClose }) {
               ))}
             </ul>
           )}
+        </section>
+
+        <section className="flex flex-col gap-3 mt-8 pt-6 border-t border-[var(--surface-border)]">
+          <h3 className="text-sm font-medium text-[var(--text-secondary)]">Données</h3>
+          <p className="text-xs text-[var(--text-muted)]">
+            Raccourcis, notes, tâches et préférences sont stockés uniquement dans ce navigateur.
+          </p>
+          <button
+            type="button"
+            onClick={handleReset}
+            className={`self-start flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+              confirmingReset
+                ? 'text-red-500 border-red-500/40 bg-red-500/10'
+                : 'text-[var(--text-secondary)] border-[var(--surface-border)] bg-[var(--surface-bg)] hover:bg-[var(--surface-hover)]'
+            }`}
+          >
+            <RotateCcw size={14} />
+            {confirmingReset ? 'Cliquer à nouveau pour confirmer' : 'Réinitialiser toutes les données'}
+          </button>
         </section>
       </aside>
     </>
