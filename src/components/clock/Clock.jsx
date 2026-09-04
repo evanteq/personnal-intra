@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-function formatTime(date) {
-  return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+function pad(n) {
+  return String(n).padStart(2, '0')
 }
 
 export default function Clock() {
@@ -13,8 +13,11 @@ export default function Clock() {
   }, [])
 
   return (
-    <span className="text-3xl md:text-4xl font-semibold tracking-tight tabular-nums text-[var(--text-primary)]">
-      {formatTime(now)}
+    <span className="flex items-baseline font-semibold tracking-tight tabular-nums text-[var(--text-primary)]">
+      <span className="text-3xl md:text-4xl">
+        {pad(now.getHours())}:{pad(now.getMinutes())}
+      </span>
+      <span className="text-lg md:text-xl opacity-40 ml-0.5">:{pad(now.getSeconds())}</span>
     </span>
   )
 }

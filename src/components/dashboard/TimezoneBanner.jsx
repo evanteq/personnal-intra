@@ -1,54 +1,33 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Globe2, Plus, X } from 'lucide-react'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { uid } from '../../utils/id'
+import { getUtcOffsetLabel, searchTimezones } from '../../data/timezones'
 
 const DEFAULT_ZONES = [
   { id: 'shanghai', label: 'Shanghai', timeZone: 'Asia/Shanghai' },
   { id: 'los-angeles', label: 'Los Angeles', timeZone: 'America/Los_Angeles' },
 ]
 
-const FALLBACK_TIMEZONES = [
-  'Europe/Paris', 'Europe/London', 'Europe/Berlin', 'Europe/Madrid', 'Europe/Rome', 'Europe/Moscow',
-  'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Sao_Paulo', 'America/Mexico_City',
-  'Asia/Shanghai', 'Asia/Tokyo', 'Asia/Seoul', 'Asia/Singapore', 'Asia/Dubai', 'Asia/Kolkata', 'Asia/Hong_Kong',
-  'Australia/Sydney', 'Australia/Melbourne', 'Pacific/Auckland', 'Africa/Cairo', 'Africa/Johannesburg',
-]
-
-function getTimezoneList() {
-  try {
-    const list = Intl.supportedValuesOf('timeZone')
-    if (Array.isArray(list) && list.length) return list
-  } catch {
-    // Intl.supportedValuesOf unsupported — fall back to a curated list below.
-  }
-  return FALLBACK_TIMEZONES
-}
-
-function labelFromTimeZone(tz) {
-  const city = tz.split('/').pop() ?? tz
-  return city.replace(/_/g, ' ')
-}
-
 export default function TimezoneBanner() {
   const [zones, setZones] = useLocalStorage('intra:worldClockZones', DEFAULT_ZONES)
   const [now, setNow] = useState(new Date())
   const [adding, setAdding] = useState(false)
-  const [draft, setDraft] = useState('')
-
-  const tzOptions = useMemo(() => getTimezoneList(), [])
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
-  function addZone(e) {
-    e.preventDefault()
-    const tz = draft.trim()
-    if (!tz || !tzOptions.includes(tz) || zones.some((z) => z.timeZone === tz)) return
-    setZones((prev) => [...prev, { id: uid(), label: labelFromTimeZone(tz), timeZone: tz }])
-    setDraft('')
+  const results = searchTimezones(
+    query,
+    zones.map((z) => z.timeZone),
+  )
+
+  function addZone(city) {
+    setZones((prev) => [...prev, { id: uid(), label: city.city, timeZone: city.timeZone }])
+    setQuery('')
     setAdding(false)
   }
 
@@ -57,12 +36,15 @@ export default function TimezoneBanner() {
   }
 
   return (
-    <div className="glass glass-shadow rounded-2xl px-2 py-1 flex items-stretch divide-x divide-[var(--surface-border)] animate-fade-in">
+    <div className="relative z-30 glass glass-shadow rounded-2xl px-2 py-1 flex items-stretch divide-x divide-[var(--surface-border)] animate-fade-in">
       {zones.map((zone) => (
         <div key={zone.id} className="group relative flex-1 flex items-center justify-center gap-2 px-4 py-3 min-w-0">
           <Globe2 size={15} className="text-[var(--accent)] shrink-0" />
           <div className="flex flex-col leading-tight items-center min-w-0">
-            <span className="text-xs text-[var(--text-muted)] truncate max-w-full">{zone.label}</span>
+            <span className="text-xs text-[var(--text-muted)] truncate max-w-full flex items-center gap-1">
+              {zone.label}
+              <span className="text-[10px] text-[var(--text-faint)]">{getUtcOffsetLabel(zone.timeZone, now)}</span>
+            </span>
             <span className="text-sm font-medium tabular-nums text-[var(--text-primary)]">
               {now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: zone.timeZone })}
             </span>
@@ -78,26 +60,17 @@ export default function TimezoneBanner() {
       ))}
 
       {adding ? (
-        <form onSubmit={addZone} className="flex-1 flex items-center gap-2 px-4 py-2 min-w-[220px]">
+        <div className="relative flex-1 flex items-center gap-2 px-4 py-2 min-w-[220px]">
           <input
             autoFocus
-            list="timezone-options"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Escape') setAdding(false)
             }}
-            placeholder="Ville ou fuseau (ex : Tokyo)…"
+            placeholder="Ville ou pays (ex : Espagne)…"
             className="w-full bg-transparent outline-none text-sm text-[var(--text-primary)] placeholder:text-[var(--text-faint)]"
           />
-          <datalist id="timezone-options">
-            {tzOptions.map((tz) => (
-              <option key={tz} value={tz} />
-            ))}
-          </datalist>
-          <button type="submit" className="btn-accent px-2.5 py-1 rounded-lg text-xs font-medium shrink-0">
-            OK
-          </button>
           <button
             type="button"
             onClick={() => setAdding(false)}
@@ -105,7 +78,33 @@ export default function TimezoneBanner() {
           >
             <X size={14} />
           </button>
-        </form>
+
+          {query.trim() && (
+            <ul
+              className="absolute left-0 right-0 top-full mt-2 rounded-xl overflow-hidden z-20 border border-[var(--surface-border)] shadow-[var(--shadow-lg)] max-h-64 overflow-y-auto thin-scroll"
+              style={{ backgroundColor: 'var(--modal-bg)' }}
+            >
+              {results.length > 0 ? (
+                results.map((r) => (
+                  <li key={`${r.timeZone}-${r.city}`}>
+                    <button
+                      type="button"
+                      onClick={() => addZone(r)}
+                      className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-left hover:bg-[var(--surface-hover)]"
+                    >
+                      <span className="text-[var(--text-primary)]">
+                        {r.city} <span className="text-[var(--text-faint)]">· {r.country}</span>
+                      </span>
+                      <span className="text-xs text-[var(--text-faint)] shrink-0 ml-2">{getUtcOffsetLabel(r.timeZone)}</span>
+                    </button>
+                  </li>
+                ))
+              ) : (
+                <li className="px-3 py-2 text-sm text-[var(--text-faint)]">Aucun résultat</li>
+              )}
+            </ul>
+          )}
+        </div>
       ) : (
         <button
           type="button"

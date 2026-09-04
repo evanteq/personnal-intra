@@ -11,7 +11,7 @@ export default function NavSidebar({ page, onNavigate }) {
   return (
     <div className="flex md:flex-col gap-1 glass glass-shadow rounded-2xl p-2 md:p-3 animate-fade-in">
       <div className="hidden md:flex items-center justify-center px-2 pb-3 mb-1 border-b border-[var(--surface-border)]">
-        <img src="/ateq-logo.png" alt="ATEQ" className="h-7 w-auto rounded-md bg-white px-2 py-1.5" />
+        <img src="/ateq-logo.png" alt="ATEQ" className="h-10 w-auto max-w-full rounded-md bg-white px-3 py-2" />
       </div>
 
       <nav className="flex md:flex-col gap-1 flex-1">

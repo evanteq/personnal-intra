@@ -16,7 +16,7 @@ function normalizeStatus(todo) {
 
 function Stat({ icon: Icon, value, label }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3 flex-1 min-w-[140px]">
+    <div className="flex items-center gap-3 px-4 py-2.5 flex-1 min-w-[140px]">
       <Icon size={18} className="text-[var(--accent)] shrink-0" />
       <div>
         <p className="text-xl font-semibold text-[var(--text-primary)] leading-none">{value}</p>
@@ -28,7 +28,7 @@ function Stat({ icon: Icon, value, label }) {
 
 function SectionCard({ title, onSeeAll, children, className = '' }) {
   return (
-    <div className={`glass glass-shadow rounded-2xl p-5 flex flex-col gap-3 min-h-0 h-full ${className}`}>
+    <div className={`glass glass-shadow rounded-2xl p-4 flex flex-col gap-2 min-h-0 h-full ${className}`}>
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
         <button
@@ -63,19 +63,19 @@ export default function Dashboard({ onNavigate }) {
   const latestNote = [...notes].sort((a, b) => b.updatedAt - a.updatedAt)[0]
 
   return (
-    <div className="flex flex-col gap-4 h-full min-h-0 overflow-y-auto thin-scroll pr-1">
+    <div className="flex flex-col gap-3 h-full min-h-0 overflow-y-auto thin-scroll pr-1">
       <TimezoneBanner />
 
-      <div className="glass glass-shadow rounded-2xl flex flex-wrap divide-x divide-[var(--surface-border)]">
+      <div className="glass glass-shadow rounded-2xl flex flex-wrap divide-x divide-[var(--surface-border)] shrink-0">
         <Stat icon={Link2} value={links.length} label="Raccourcis" />
         <Stat icon={NotebookPen} value={notes.length} label="Notes" />
         <Stat icon={ListTodo} value={todoCount + doingCount} label="Tâches en cours" />
         <Stat icon={CircleCheck} value={doneCount} label="Tâches terminées" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-4 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-3 flex-1 min-h-0">
         <SectionCard title="Raccourcis rapides" onSeeAll={() => onNavigate('shortcuts')}>
-          <div className="grid grid-cols-5 gap-1 content-start flex-1">
+          <div className="grid grid-cols-5 gap-1 content-start flex-1 min-h-0 overflow-y-auto thin-scroll">
             {quickLinks.map((link) => {
               const Icon = getIcon(link.icon)
               const faviconUrl = !link.icon ? getFaviconUrl(link.url) : null
@@ -85,20 +85,20 @@ export default function Dashboard({ onNavigate }) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-1.5 rounded-xl p-2.5 hover:bg-[var(--surface-hover)] transition-colors"
+                  className="flex flex-col items-center gap-1 rounded-xl p-1.5 hover:bg-[var(--surface-hover)] transition-colors"
                   title={link.title}
                 >
                   <div
-                    className="flex items-center justify-center w-9 h-9 rounded-lg overflow-hidden"
+                    className="flex items-center justify-center w-8 h-8 rounded-lg overflow-hidden"
                     style={{ backgroundColor: 'var(--accent-soft)' }}
                   >
                     {faviconUrl ? (
-                      <img src={faviconUrl} alt="" className="w-5 h-5" draggable={false} />
+                      <img src={faviconUrl} alt="" className="w-4 h-4" draggable={false} />
                     ) : (
-                      <Icon size={16} className="text-[var(--accent)]" />
+                      <Icon size={14} className="text-[var(--accent)]" />
                     )}
                   </div>
-                  <span className="text-[11px] text-[var(--text-secondary)] truncate w-full text-center">
+                  <span className="text-[10px] text-[var(--text-secondary)] truncate w-full text-center">
                     {link.title}
                   </span>
                 </a>
@@ -109,11 +109,11 @@ export default function Dashboard({ onNavigate }) {
                 key={`placeholder-${i}`}
                 type="button"
                 onClick={() => onNavigate('shortcuts')}
-                className="flex flex-col items-center justify-center gap-1.5 rounded-xl p-2.5 border border-dashed border-[var(--surface-border)] text-[var(--text-faint)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/60 transition-colors"
+                className="flex flex-col items-center justify-center gap-1 rounded-xl p-1.5 border border-dashed border-[var(--surface-border)] text-[var(--text-faint)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/60 transition-colors"
                 title="Ajouter un raccourci"
               >
-                <span className="flex items-center justify-center w-9 h-9 rounded-lg text-lg leading-none">+</span>
-                <span className="text-[11px]">Ajouter</span>
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg text-base leading-none">+</span>
+                <span className="text-[10px]">Ajouter</span>
               </button>
             ))}
           </div>

@@ -19,8 +19,8 @@ function getGreeting() {
 export default function GreetingDate() {
   return (
     <div className="flex flex-col leading-tight">
-      <span className="text-base font-semibold text-[var(--text-primary)]">{getGreeting()}</span>
-      <span className="text-xs text-[var(--text-muted)]">{capitalize(dateFormatter.format(new Date()))}</span>
+      <span className="text-xs text-[var(--text-muted)]">{getGreeting()}</span>
+      <span className="text-base font-semibold text-[var(--text-primary)]">{capitalize(dateFormatter.format(new Date()))}</span>
     </div>
   )
 }
