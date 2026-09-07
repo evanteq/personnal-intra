@@ -75,7 +75,7 @@ export default function Dashboard({ onNavigate }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-3 flex-1 min-h-0">
         <SectionCard title="Raccourcis rapides" onSeeAll={() => onNavigate('shortcuts')}>
-          <div className="grid grid-cols-5 gap-1 content-start flex-1 min-h-0 overflow-y-auto thin-scroll">
+          <div className="grid grid-cols-5 grid-rows-5 gap-2 flex-1 min-h-0 h-full w-full">
             {quickLinks.map((link) => {
               const Icon = getIcon(link.icon)
               const faviconUrl = !link.icon ? getFaviconUrl(link.url) : null
@@ -85,20 +85,20 @@ export default function Dashboard({ onNavigate }) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex flex-col items-center gap-1 rounded-xl p-1.5 hover:bg-[var(--surface-hover)] transition-colors"
+                  className="flex flex-col items-center justify-center gap-1.5 rounded-xl p-2 h-full w-full hover:bg-[var(--surface-hover)] transition-colors"
                   title={link.title}
                 >
                   <div
-                    className="flex items-center justify-center w-8 h-8 rounded-lg overflow-hidden"
+                    className="flex items-center justify-center w-9 h-9 rounded-lg overflow-hidden shrink-0"
                     style={{ backgroundColor: 'var(--accent-soft)' }}
                   >
                     {faviconUrl ? (
-                      <img src={faviconUrl} alt="" className="w-4 h-4" draggable={false} />
+                      <img src={faviconUrl} alt="" className="w-5 h-5" draggable={false} />
                     ) : (
-                      <Icon size={14} className="text-[var(--accent)]" />
+                      <Icon size={16} className="text-[var(--accent)]" />
                     )}
                   </div>
-                  <span className="text-[10px] text-[var(--text-secondary)] truncate w-full text-center">
+                  <span className="text-[11px] text-[var(--text-secondary)] truncate w-full text-center">
                     {link.title}
                   </span>
                 </a>
@@ -109,11 +109,11 @@ export default function Dashboard({ onNavigate }) {
                 key={`placeholder-${i}`}
                 type="button"
                 onClick={() => onNavigate('shortcuts')}
-                className="flex flex-col items-center justify-center gap-1 rounded-xl p-1.5 border border-dashed border-[var(--surface-border)] text-[var(--text-faint)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/60 transition-colors"
+                className="flex flex-col items-center justify-center gap-1.5 rounded-xl p-2 h-full w-full border border-dashed border-[var(--surface-border)] text-[var(--text-faint)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/60 transition-colors"
                 title="Ajouter un raccourci"
               >
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg text-base leading-none">+</span>
-                <span className="text-[10px]">Ajouter</span>
+                <span className="flex items-center justify-center w-9 h-9 rounded-lg text-lg leading-none">+</span>
+                <span className="text-[11px]">Ajouter</span>
               </button>
             ))}
           </div>
