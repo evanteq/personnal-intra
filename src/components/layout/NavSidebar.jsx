@@ -1,11 +1,12 @@
-import { Kanban, LayoutDashboard, Link2, NotebookPen } from 'lucide-react'
+import { CalendarDays, Kanban, LayoutDashboard, Link2, NotebookPen } from 'lucide-react'
 import ateqLogo from '../../assets/ateq-logo.png'
 
 const PAGES = [
   { key: 'dashboard', label: 'Accueil', icon: LayoutDashboard },
   { key: 'shortcuts', label: 'Raccourcis', icon: Link2 },
   { key: 'notes', label: 'Notes', icon: NotebookPen },
-  { key: 'todo', label: 'To-Do', icon: Kanban },
+  { key: 'planning', label: 'Planning', icon: CalendarDays },
+  { key: 'todo', label: 'Tâches', icon: Kanban },
 ]
 
 export default function NavSidebar({ page, onNavigate }) {

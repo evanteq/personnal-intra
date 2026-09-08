@@ -9,12 +9,14 @@ import SettingsPanel from './components/settings/SettingsPanel'
 import Dashboard from './pages/Dashboard'
 import ShortcutsPage from './pages/ShortcutsPage'
 import NotesPage from './pages/NotesPage'
+import PlanningPage from './pages/PlanningPage'
 import TodoPage from './pages/TodoPage'
 
 const PAGES = {
   dashboard: Dashboard,
   shortcuts: ShortcutsPage,
   notes: NotesPage,
+  planning: PlanningPage,
   todo: TodoPage,
 }
 
