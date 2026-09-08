@@ -214,7 +214,7 @@ body {
   top: 50%;
   height: 2px;
   width: 0;
-  background: #ef4444;
+  background: var(--accent);
   border-radius: 999px;
   transform: translateY(-50%);
 }
