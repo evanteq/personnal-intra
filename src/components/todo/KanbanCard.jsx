@@ -4,11 +4,12 @@ import { parseDateKey, toDateKey } from '../../utils/date'
 
 const dueDateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 
-export default function KanbanCard({ todo, canMoveLeft, canMoveRight, onMove, onDelete, dragHandlers, isDragOver }) {
+export default function KanbanCard({ todo, canMoveLeft, canMoveRight, onMove, onDelete, onOpen, dragHandlers, isDragOver }) {
   const [confirming, setConfirming] = useState(false)
   const overdue = todo.dueDate && todo.dueDate < toDateKey(new Date()) && todo.status !== 'done'
 
-  function handleDelete() {
+  function handleDelete(e) {
+    e.stopPropagation()
     if (confirming) {
       onDelete(todo.id)
     } else {
@@ -21,7 +22,8 @@ export default function KanbanCard({ todo, canMoveLeft, canMoveRight, onMove, on
     <div
       draggable
       {...dragHandlers}
-      className={`group flex flex-col gap-2 rounded-xl p-3 glass glass-hover cursor-grab active:cursor-grabbing animate-fade-in ${
+      onClick={onOpen}
+      className={`group flex flex-col gap-2 rounded-xl p-3 glass glass-hover cursor-pointer animate-fade-in ${
         isDragOver ? 'ring-2 ring-[var(--accent)]' : ''
       }`}
     >
@@ -51,7 +53,10 @@ export default function KanbanCard({ todo, canMoveLeft, canMoveRight, onMove, on
       )}
       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
-          onClick={() => onMove(-1)}
+          onClick={(e) => {
+            e.stopPropagation()
+            onMove(-1)
+          }}
           disabled={!canMoveLeft}
           aria-label="Déplacer vers la colonne précédente"
           className="p-1 rounded-md text-[var(--text-faint)] hover:text-[var(--text-primary)] disabled:opacity-0 disabled:pointer-events-none"
@@ -59,7 +64,10 @@ export default function KanbanCard({ todo, canMoveLeft, canMoveRight, onMove, on
           <ChevronLeft size={14} />
         </button>
         <button
-          onClick={() => onMove(1)}
+          onClick={(e) => {
+            e.stopPropagation()
+            onMove(1)
+          }}
           disabled={!canMoveRight}
           aria-label="Déplacer vers la colonne suivante"
           className="p-1 rounded-md text-[var(--text-faint)] hover:text-[var(--text-primary)] disabled:opacity-0 disabled:pointer-events-none"

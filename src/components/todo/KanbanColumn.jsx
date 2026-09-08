@@ -1,13 +1,11 @@
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
 import KanbanCard from './KanbanCard'
 
 export default function KanbanColumn({
   label,
   todos,
-  onAdd,
   onMove,
   onDelete,
+  onOpenTask,
   isOver,
   columnDragHandlers,
   makeCardDragHandlers,
@@ -15,16 +13,6 @@ export default function KanbanColumn({
   canMoveLeft,
   canMoveRight,
 }) {
-  const [draft, setDraft] = useState('')
-
-  function handleAdd(e) {
-    e.preventDefault()
-    const text = draft.trim()
-    if (!text) return
-    onAdd(text)
-    setDraft('')
-  }
-
   return (
     <div
       {...columnDragHandlers}
@@ -51,6 +39,7 @@ export default function KanbanColumn({
             canMoveRight={canMoveRight}
             onMove={(dir) => onMove(todo.id, dir)}
             onDelete={onDelete}
+            onOpen={() => onOpenTask(todo)}
             isDragOver={dragOverCardId === todo.id}
             dragHandlers={makeCardDragHandlers(todo.id)}
           />
@@ -59,22 +48,6 @@ export default function KanbanColumn({
           <p className="text-xs text-[var(--text-faint)] text-center py-4">Aucune tâche</p>
         )}
       </div>
-
-      <form onSubmit={handleAdd} className="flex items-center gap-2">
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Ajouter une tâche…"
-          className="flex-1 min-w-0 rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-1.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)]"
-        />
-        <button
-          type="submit"
-          aria-label="Ajouter"
-          className="flex items-center justify-center w-8 h-8 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] shrink-0"
-        >
-          <Plus size={16} />
-        </button>
-      </form>
     </div>
   )
 }
