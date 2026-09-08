@@ -15,29 +15,37 @@ const VIEW_OPTIONS = [
   { key: 'month', label: 'Mois' },
 ]
 
-function TaskChip({ todo, onOpen, onToggle, onUnschedule, onDragStart, onDragEnd }) {
+function TaskChip({ todo, fading, onOpen, onToggle, onUnschedule, onDragStart, onDragEnd }) {
+  const checked = fading || todo.status === 'done'
   return (
     <div
-      draggable
+      draggable={!fading}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      onClick={onOpen}
-      className="group text-xs rounded-lg px-2 py-1.5 glass glass-hover cursor-pointer flex items-start gap-1.5"
+      onClick={fading ? undefined : onOpen}
+      className={`group text-xs rounded-lg px-2 py-1.5 glass glass-hover flex items-start gap-1.5 transition-all duration-300 ease-out ${
+        fading ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100 cursor-pointer'
+      }`}
+      style={{
+        maxHeight: fading ? 0 : 60,
+        marginBottom: fading ? 0 : undefined,
+        paddingTop: fading ? 0 : undefined,
+        paddingBottom: fading ? 0 : undefined,
+        overflow: 'hidden',
+      }}
       title={todo.text}
     >
       <input
         type="checkbox"
-        checked={todo.status === 'done'}
+        checked={checked}
         onChange={onToggle}
         onClick={(e) => e.stopPropagation()}
         className="mt-0.5 shrink-0 accent-[var(--accent)]"
       />
-      <span
-        className={`truncate flex-1 ${todo.status === 'done' ? 'line-through text-[var(--text-faint)]' : 'text-[var(--text-primary)]'}`}
-      >
+      <span className={`truncate flex-1 ${checked ? 'line-through text-[var(--text-faint)]' : 'text-[var(--text-primary)]'}`}>
         {todo.text}
       </span>
-      {todo.dueDate && (
+      {todo.dueDate && !fading && (
         <button
           type="button"
           onClick={onUnschedule}
@@ -59,6 +67,7 @@ export default function PlanningPage() {
   const [dragOverKey, setDragOverKey] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTodo, setEditingTodo] = useState(null)
+  const [fadingIds, setFadingIds] = useState(() => new Set())
 
   const todayKey = toDateKey(new Date())
 
@@ -78,7 +87,7 @@ export default function PlanningPage() {
     return Array.from({ length: count }, (_, i) => addDays(weekStart, i))
   }, [anchor, viewMode])
 
-  const unscheduled = todos.filter((t) => !t.dueDate && t.status !== 'done')
+  const unscheduled = todos.filter((t) => !t.dueDate && (t.status !== 'done' || fadingIds.has(t.id)))
 
   function goPrev() {
     setAnchor((d) => (viewMode === 'month' ? new Date(d.getFullYear(), d.getMonth() - 1, 1) : addDays(d, -7)))
@@ -127,10 +136,23 @@ export default function PlanningPage() {
   function chipProps(todo) {
     return {
       todo,
+      fading: fadingIds.has(todo.id),
       onOpen: () => openEdit(todo),
       onToggle: (e) => {
         e.stopPropagation()
-        updateTodo(todo.id, { status: todo.status === 'done' ? 'todo' : 'done' })
+        if (todo.status === 'done') {
+          updateTodo(todo.id, { status: 'todo' })
+          return
+        }
+        setFadingIds((prev) => new Set(prev).add(todo.id))
+        setTimeout(() => {
+          updateTodo(todo.id, { status: 'done' })
+          setFadingIds((prev) => {
+            const next = new Set(prev)
+            next.delete(todo.id)
+            return next
+          })
+        }, 300)
       },
       onUnschedule: (e) => {
         e.stopPropagation()
@@ -234,7 +256,7 @@ export default function PlanningPage() {
               const key = toDateKey(day)
               const isToday = key === todayKey
               const inMonth = day.getMonth() === anchor.getMonth()
-              const dayTodos = todos.filter((t) => t.dueDate === key)
+              const dayTodos = todos.filter((t) => t.dueDate === key && (t.status !== 'done' || fadingIds.has(t.id)))
               const isOver = dragOverKey === key
               return (
                 <div
@@ -275,7 +297,7 @@ export default function PlanningPage() {
             {days.map((day) => {
               const key = toDateKey(day)
               const isToday = key === todayKey
-              const dayTodos = todos.filter((t) => t.dueDate === key)
+              const dayTodos = todos.filter((t) => t.dueDate === key && (t.status !== 'done' || fadingIds.has(t.id)))
               const isOver = dragOverKey === key
               return (
                 <div
