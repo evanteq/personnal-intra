@@ -23,16 +23,9 @@ function TaskChip({ todo, fading, onOpen, onToggle, onUnschedule, onDragStart, o
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={fading ? undefined : onOpen}
-      className={`group text-xs rounded-lg px-2 py-1.5 glass glass-hover flex items-start gap-1.5 transition-all duration-300 ease-out ${
-        fading ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100 cursor-pointer'
+      className={`group text-xs rounded-lg px-2 py-1.5 glass glass-hover flex items-start gap-1.5 ${
+        fading ? 'task-completing' : 'cursor-pointer'
       }`}
-      style={{
-        maxHeight: fading ? 0 : 60,
-        marginBottom: fading ? 0 : undefined,
-        paddingTop: fading ? 0 : undefined,
-        paddingBottom: fading ? 0 : undefined,
-        overflow: 'hidden',
-      }}
       title={todo.text}
     >
       <input
@@ -42,8 +35,11 @@ function TaskChip({ todo, fading, onOpen, onToggle, onUnschedule, onDragStart, o
         onClick={(e) => e.stopPropagation()}
         className="mt-0.5 shrink-0 accent-[var(--accent)]"
       />
-      <span className={`truncate flex-1 ${checked ? 'line-through text-[var(--text-faint)]' : 'text-[var(--text-primary)]'}`}>
-        {todo.text}
+      <span className="relative flex-1 min-w-0">
+        <span className={`block truncate ${checked && !fading ? 'line-through text-[var(--text-faint)]' : 'text-[var(--text-primary)]'}`}>
+          {todo.text}
+        </span>
+        {fading && <span className="task-strike-line" />}
       </span>
       {todo.dueDate && !fading && (
         <button
@@ -152,7 +148,7 @@ export default function PlanningPage() {
             next.delete(todo.id)
             return next
           })
-        }, 300)
+        }, 1000)
       },
       onUnschedule: (e) => {
         e.stopPropagation()

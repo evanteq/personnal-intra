@@ -172,3 +172,53 @@ body {
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
 }
+
+/* Task completion: a red line strikes the text, then the whole chip
+   shrinks toward the checkbox and fades out, like being sucked away. */
+@keyframes task-strike {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes task-suck {
+  0% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+  35% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    transform: scale(0.05) translateY(-16px);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+
+.task-completing {
+  animation: task-suck 1s ease-in forwards;
+  transform-origin: 14px center;
+  pointer-events: none;
+}
+
+.task-strike-line {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 2px;
+  width: 0;
+  background: #ef4444;
+  border-radius: 999px;
+  transform: translateY(-50%);
+}
+
+.task-completing .task-strike-line {
+  animation: task-strike 0.35s ease-out forwards;
+}
