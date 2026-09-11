@@ -21,13 +21,29 @@ function emptySlots() {
   return Array(QUICK_LINK_COUNT).fill(null)
 }
 
-function Stat({ icon: Icon, value, label }) {
+const STAT_THEMES = {
+  accent: { fg: 'var(--accent)', bg: 'var(--accent-soft)' },
+  blue: { fg: '#38bdf8', bg: 'rgba(56, 189, 248, 0.16)' },
+  amber: { fg: '#f59e0b', bg: 'rgba(245, 158, 11, 0.16)' },
+  emerald: { fg: '#10b981', bg: 'rgba(16, 185, 129, 0.16)' },
+}
+
+function Stat({ icon: Icon, value, label, theme = 'accent', delay = 0 }) {
+  const { fg, bg } = STAT_THEMES[theme]
   return (
-    <div className="flex items-center gap-3 px-4 py-2.5 flex-1 min-w-[140px]">
-      <Icon size={18} className="text-[var(--accent)] shrink-0" />
-      <div>
-        <p className="text-xl font-semibold text-[var(--text-primary)] leading-none">{value}</p>
-        <p className="text-xs text-[var(--text-muted)] mt-1">{label}</p>
+    <div
+      className="flex items-center gap-3 rounded-2xl p-3.5 flex-1 min-w-[150px] glass glass-hover animate-fade-in"
+      style={{ animationDelay: `${delay}ms`, animationFillMode: 'backwards' }}
+    >
+      <div
+        className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
+        style={{ backgroundColor: bg, color: fg }}
+      >
+        <Icon size={19} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-2xl font-bold text-[var(--text-primary)] leading-none tracking-tight">{value}</p>
+        <p className="text-xs text-[var(--text-muted)] mt-1 truncate">{label}</p>
       </div>
     </div>
   )
@@ -131,14 +147,19 @@ export default function Dashboard({ onNavigate }) {
   const availableLinks = links.filter((l) => !quickSlots.includes(l.id))
 
   return (
-    <div className="flex flex-col gap-3 h-full min-h-0 overflow-y-auto thin-scroll pr-1">
+    <div className="relative flex flex-col gap-3 h-full min-h-0 overflow-y-auto thin-scroll pr-1">
+      <div
+        className="pointer-events-none absolute -top-16 left-8 w-80 h-80 rounded-full blur-3xl opacity-25 -z-10"
+        style={{ backgroundColor: 'var(--accent)' }}
+      />
+
       <TimezoneBanner />
 
-      <div className="glass glass-shadow rounded-2xl flex flex-wrap divide-x divide-[var(--surface-border)] shrink-0">
-        <Stat icon={Link2} value={links.length} label="Raccourcis" />
-        <Stat icon={NotebookPen} value={notes.length} label="Notes" />
-        <Stat icon={ListTodo} value={todoCount + doingCount} label="Tâches en cours" />
-        <Stat icon={CircleCheck} value={doneCount} label="Tâches terminées" />
+      <div className="flex flex-wrap gap-3 shrink-0">
+        <Stat icon={Link2} value={links.length} label="Raccourcis" theme="accent" delay={0} />
+        <Stat icon={NotebookPen} value={notes.length} label="Notes" theme="blue" delay={40} />
+        <Stat icon={ListTodo} value={todoCount + doingCount} label="Tâches en cours" theme="amber" delay={80} />
+        <Stat icon={CircleCheck} value={doneCount} label="Tâches terminées" theme="emerald" delay={120} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-3 flex-1 min-h-0">
@@ -172,7 +193,7 @@ export default function Dashboard({ onNavigate }) {
                       setDragIndex(null)
                       setDragOverIndex(null)
                     }}
-                    className={`group relative flex flex-col items-center justify-center gap-1.5 rounded-xl p-2 h-full w-full hover:bg-[var(--surface-hover)] transition-colors cursor-grab active:cursor-grabbing ${
+                    className={`group relative flex flex-col items-center justify-center gap-1.5 rounded-xl p-2 h-full w-full hover:bg-[var(--surface-hover)] hover:scale-[1.05] hover:shadow-[0_8px_20px_-8px_var(--accent-soft)] transition-all duration-150 cursor-grab active:cursor-grabbing ${
                       isDragOver ? 'ring-2 ring-[var(--accent)]' : ''
                     }`}
                     title={link.title}
