@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import { useTodos } from '../hooks/useTodos'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import TaskModal from '../components/todo/TaskModal'
+import { DEFAULT_SCHOOL_WEEKS } from '../data/schoolWeeks'
 import { addDays, startOfWeek, toDateKey } from '../utils/date'
 
 const dayNameFormatter = new Intl.DateTimeFormat('fr-FR', { weekday: 'short' })
@@ -67,12 +68,16 @@ function TaskChip({ todo, fading, onOpen, onToggle, onUnschedule, onDragStart, o
   )
 }
 
-function MiniMonth({ year, month, todos, fadingIds, todayKey, onSelect }) {
+function MiniMonth({ year, month, todos, fadingIds, todayKey, schoolWeeks, onSelect }) {
   const monthDate = new Date(year, month, 1)
   const gridDays = getMonthGridDays(year, month)
 
   function hasTasks(key) {
     return todos.some((t) => t.dueDate === key && (t.status !== 'done' || fadingIds.has(t.id)))
+  }
+
+  function isSchoolDay(key) {
+    return schoolWeeks.some((w) => key >= w.start && key <= w.end)
   }
 
   return (
@@ -104,7 +109,7 @@ function MiniMonth({ year, month, todos, fadingIds, todayKey, onSelect }) {
                   : inMonth
                     ? 'text-[var(--text-secondary)]'
                     : 'text-[var(--text-faint)] opacity-40'
-              } ${isWeekend && inMonth ? 'day-weekend' : ''}`}
+              } ${isWeekend && inMonth ? 'day-weekend' : ''} ${isSchoolDay(key) && inMonth ? 'day-school' : ''}`}
             >
               {d.getDate()}
               {hasTasks(key) && (
@@ -130,8 +135,13 @@ export default function PlanningPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTodo, setEditingTodo] = useState(null)
   const [fadingIds, setFadingIds] = useState(() => new Set())
+  const [schoolWeeks] = useLocalStorage('intra:schoolWeeks', DEFAULT_SCHOOL_WEEKS)
 
   const todayKey = toDateKey(new Date())
+
+  function isSchoolDay(key) {
+    return schoolWeeks.some((w) => key >= w.start && key <= w.end)
+  }
 
   const days = useMemo(() => {
     if (viewMode === 'year') return []
@@ -324,6 +334,7 @@ export default function PlanningPage() {
                 todos={todos}
                 fadingIds={fadingIds}
                 todayKey={todayKey}
+                schoolWeeks={schoolWeeks}
                 onSelect={(monthDate) => {
                   setAnchor(monthDate)
                   setViewMode('month')
@@ -365,7 +376,7 @@ export default function PlanningPage() {
                     }}
                     className={`glass rounded-xl p-2 flex flex-col gap-1.5 min-h-0 transition-colors ${
                       isOver ? 'ring-2 ring-[var(--accent)]' : ''
-                    } ${isWeekend ? 'day-weekend' : ''} ${!inMonth ? 'opacity-40' : ''}`}
+                    } ${isWeekend ? 'day-weekend' : ''} ${isSchoolDay(key) ? 'day-school' : ''} ${!inMonth ? 'opacity-40' : ''}`}
                   >
                     <span
                       className={`text-[11px] font-semibold shrink-0 ${isToday ? 'text-[var(--accent)]' : 'text-[var(--text-faint)]'}`}
@@ -407,7 +418,7 @@ export default function PlanningPage() {
                   }}
                   className={`glass glass-shadow rounded-2xl p-2.5 flex flex-col gap-2 min-h-[170px] lg:min-h-0 transition-colors ${
                     isOver ? 'ring-2 ring-[var(--accent)]' : ''
-                  }`}
+                  } ${isSchoolDay(key) ? 'day-school' : ''}`}
                 >
                   <div className="flex items-baseline justify-between shrink-0">
                     <span
