@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Monitor, Plus, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import { useTodos } from '../hooks/useTodos'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import TaskModal from '../components/todo/TaskModal'
@@ -253,17 +253,7 @@ export default function PlanningPage() {
   }
 
   return (
-    <>
-      <div className="flex lg:hidden flex-col items-center justify-center text-center gap-3 h-full min-h-0 glass glass-shadow rounded-2xl p-6">
-        <Monitor size={32} className="text-[var(--text-faint)]" />
-        <p className="text-sm font-medium text-[var(--text-primary)]">Calendrier disponible sur ordinateur</p>
-        <p className="text-xs text-[var(--text-muted)] max-w-xs">
-          Cette page est optimisée pour un écran d&rsquo;ordinateur (desktop ou laptop). Passez sur un écran plus large
-          pour y accéder.
-        </p>
-      </div>
-
-      <div className="hidden lg:flex flex-col gap-3 h-full min-h-0">
+    <div className="flex flex-col gap-3 h-full min-h-0">
       <div className="glass glass-shadow rounded-2xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2">
           <button
@@ -484,7 +474,6 @@ export default function PlanningPage() {
           </div>
         )}
       </div>
-      </div>
 
       <TaskModal
         open={modalOpen}
@@ -493,6 +482,6 @@ export default function PlanningPage() {
         onSave={handleSave}
         onDelete={handleDelete}
       />
-    </>
+    </div>
   )
 }

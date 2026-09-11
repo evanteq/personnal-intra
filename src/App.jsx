@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Monitor } from 'lucide-react'
 import { SettingsProvider, useSettings } from './context/SettingsContext'
 import { useLocalStorage } from './hooks/useLocalStorage'
 
@@ -37,7 +38,16 @@ function AppShell() {
       <div className="fixed inset-0 -z-20 bg-cover bg-center transition-[background-image] duration-500" style={backgroundStyle} />
       <div className="fixed inset-0 -z-10 transition-colors duration-300" style={{ backgroundColor: 'var(--overlay)' }} />
 
-      <div className="relative z-10 h-full flex flex-col gap-4 p-4 md:p-6">
+      <div className="lg:hidden relative z-10 h-full flex flex-col items-center justify-center text-center gap-3 p-6">
+        <Monitor size={40} className="text-[var(--text-faint)]" />
+        <p className="text-base font-semibold text-[var(--text-primary)]">Accueil Evan est disponible sur ordinateur</p>
+        <p className="text-sm text-[var(--text-muted)] max-w-xs">
+          Cette application est optimisée pour un écran d&rsquo;ordinateur (desktop ou laptop). Merci d&rsquo;utiliser un
+          écran plus large.
+        </p>
+      </div>
+
+      <div className="hidden lg:flex relative z-10 h-full flex-col gap-4 p-4 md:p-6">
         <HeaderBar onOpenSettings={() => setSettingsOpen(true)} />
 
         <div className="flex-1 flex flex-col md:flex-row gap-4 min-h-0">
