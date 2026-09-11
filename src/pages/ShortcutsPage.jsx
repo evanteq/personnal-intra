@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Search, X } from 'lucide-react'
+import { Plus, Search, X } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DEFAULT_CATEGORIES, DEFAULT_LINKS } from '../data/defaultData'
 import { uid } from '../utils/id'
 
+import PageHeader from '../components/layout/PageHeader'
 import CategoryTabs from '../components/shortcuts/CategoryTabs'
 import ShortcutGrid from '../components/shortcuts/ShortcutGrid'
 import LinkFormModal from '../components/shortcuts/LinkFormModal'
@@ -123,6 +124,21 @@ export default function ShortcutsPage({ openTarget, onOpenTargetHandled }) {
 
   return (
     <div className="flex flex-col gap-4 min-h-0 h-full">
+      <PageHeader
+        title="Raccourcis"
+        count={links.length}
+        action={
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="btn-accent flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium"
+          >
+            <Plus size={16} />
+            Ajouter un lien
+          </button>
+        }
+      />
+
       <CategoryTabs
         categories={categories}
         activeId={currentCategoryId}
@@ -156,7 +172,6 @@ export default function ShortcutsPage({ openTarget, onOpenTargetHandled }) {
         onEdit={openEditModal}
         onDelete={deleteLink}
         onReorder={reorderLinks}
-        onAddClick={openCreateModal}
         highlightId={highlightId}
         filtered={!!q}
       />

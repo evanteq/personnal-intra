@@ -79,6 +79,19 @@
   box-sizing: border-box;
 }
 
+/* Visible keyboard focus ring, applied consistently even where a component
+   sets outline-none for the mouse/click case. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible,
+[contenteditable]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 html,
 body,
 #root {

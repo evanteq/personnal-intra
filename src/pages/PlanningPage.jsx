@@ -4,6 +4,7 @@ import { useEvents } from '../hooks/useEvents'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useMergedList } from '../hooks/useMergedList'
 import EventModal from '../components/calendar/EventModal'
+import PageHeader from '../components/layout/PageHeader'
 import { DEFAULT_SCHOOL_WEEKS } from '../data/schoolWeeks'
 import { DEFAULT_PUBLIC_HOLIDAYS } from '../data/publicHolidays'
 import { addDays, parseDateKey, startOfWeek, toDateKey } from '../utils/date'
@@ -244,6 +245,8 @@ export default function PlanningPage({ openTarget, onOpenTargetHandled }) {
 
   return (
     <div className="flex flex-col gap-3 h-full min-h-0">
+      <PageHeader title="Calendrier" />
+
       <div className="glass glass-shadow rounded-2xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2">
           <button

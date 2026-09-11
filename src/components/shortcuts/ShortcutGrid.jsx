@@ -1,8 +1,17 @@
 import { useState } from 'react'
-import { Plus, SearchX } from 'lucide-react'
+import { Link2, SearchX } from 'lucide-react'
 import ShortcutCard from './ShortcutCard'
 
-export default function ShortcutGrid({ links, onEdit, onDelete, onReorder, onAddClick, highlightId, filtered }) {
+function EmptyState({ icon: Icon, message }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-[var(--text-faint)]">
+      <Icon size={32} />
+      <p className="text-sm">{message}</p>
+    </div>
+  )
+}
+
+export default function ShortcutGrid({ links, onEdit, onDelete, onReorder, highlightId, filtered }) {
   const [dragId, setDragId] = useState(null)
   const [overId, setOverId] = useState(null)
 
@@ -14,12 +23,11 @@ export default function ShortcutGrid({ links, onEdit, onDelete, onReorder, onAdd
     setOverId(null)
   }
 
-  if (filtered && links.length === 0) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-2 text-[var(--text-faint)]">
-        <SearchX size={28} />
-        <p className="text-sm">Aucun raccourci ne correspond à cette recherche.</p>
-      </div>
+  if (links.length === 0) {
+    return filtered ? (
+      <EmptyState icon={SearchX} message="Aucun raccourci ne correspond à cette recherche." />
+    ) : (
+      <EmptyState icon={Link2} message="Aucun raccourci dans cette catégorie. Utilisez le bouton “Ajouter un lien”." />
     )
   }
 
@@ -52,14 +60,6 @@ export default function ShortcutGrid({ links, onEdit, onDelete, onReorder, onAdd
             }}
           />
         ))}
-
-        <button
-          onClick={onAddClick}
-          className="flex flex-col items-center justify-center gap-2 rounded-2xl p-4 min-h-[104px] border border-dashed border-[var(--surface-border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--accent)]/60 transition-colors"
-        >
-          <Plus size={20} />
-          <span className="text-sm">Ajouter un lien</span>
-        </button>
       </div>
     </div>
   )

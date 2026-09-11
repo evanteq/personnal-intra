@@ -3,6 +3,7 @@ import { CalendarClock, CalendarDays, Plus, Repeat } from 'lucide-react'
 import { useTodos } from '../hooks/useTodos'
 import KanbanColumn from '../components/todo/KanbanColumn'
 import TaskModal from '../components/todo/TaskModal'
+import PageHeader from '../components/layout/PageHeader'
 import { parseDateKey, toDateKey } from '../utils/date'
 
 const COLUMNS = [
@@ -131,16 +132,20 @@ export default function TodoPage({ openTarget, onOpenTargetHandled }) {
 
   return (
     <div className="flex flex-col gap-3 h-full min-h-0">
-      <div className="flex justify-end shrink-0">
-        <button
-          type="button"
-          onClick={openCreate}
-          className="btn-accent flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium"
-        >
-          <Plus size={16} />
-          Ajouter une tâche
-        </button>
-      </div>
+      <PageHeader
+        title="Tâches"
+        count={todos.length}
+        action={
+          <button
+            type="button"
+            onClick={openCreate}
+            className="btn-accent flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium"
+          >
+            <Plus size={16} />
+            Ajouter une tâche
+          </button>
+        }
+      />
 
       <div
         className="flex items-center gap-3 rounded-2xl px-4 py-3 shrink-0"

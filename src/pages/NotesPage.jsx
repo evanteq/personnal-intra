@@ -4,6 +4,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DEFAULT_NOTES } from '../data/defaultData'
 import { uid } from '../utils/id'
 import { stripHtml } from '../utils/html'
+import PageHeader from '../components/layout/PageHeader'
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
@@ -123,7 +124,10 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 min-h-0 h-full">
+    <div className="flex flex-col gap-4 min-h-0 h-full">
+      <PageHeader title="Notes" count={notes.length} />
+
+      <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 min-h-0 flex-1">
       <div className="glass glass-shadow rounded-2xl p-3 flex flex-col gap-2 min-h-0">
         <button
           type="button"
@@ -166,7 +170,7 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
             const confirming = confirmingId === note.id
             const preview = stripHtml(note.content)
             return (
-              <li key={note.id}>
+              <li key={note.id} className="animate-fade-in">
                 <button
                   type="button"
                   onClick={() => setSelectedId(note.id)}
@@ -321,6 +325,7 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
             <p className="text-sm">Aucune note. Créez-en une pour commencer.</p>
           </div>
         )}
+      </div>
       </div>
     </div>
   )
