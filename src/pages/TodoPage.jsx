@@ -1,14 +1,42 @@
 import { useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { CalendarDays, Plus, Repeat } from 'lucide-react'
 import { useTodos } from '../hooks/useTodos'
 import KanbanColumn from '../components/todo/KanbanColumn'
 import TaskModal from '../components/todo/TaskModal'
+import { parseDateKey, toDateKey } from '../utils/date'
 
 const COLUMNS = [
   { key: 'todo', label: 'À faire' },
   { key: 'doing', label: 'En cours' },
   { key: 'done', label: 'Terminé' },
 ]
+
+const dueDateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
+
+function DeadlineCard({ todo, onOpen }) {
+  const overdue = todo.dueDate < toDateKey(new Date())
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="flex flex-col gap-1.5 rounded-xl p-3 glass glass-hover text-left w-full"
+    >
+      <div className="flex items-center gap-1.5">
+        {todo.recur && <Repeat size={11} className="text-[var(--text-faint)] shrink-0" />}
+        <p className="flex-1 min-w-0 text-sm text-[var(--text-primary)] truncate">{todo.text}</p>
+      </div>
+      <span
+        className={`inline-flex items-center gap-1 self-start text-[10px] px-1.5 py-0.5 rounded-full ${
+          overdue ? 'text-red-500 bg-red-500/10' : 'text-[var(--text-muted)]'
+        }`}
+        style={overdue ? undefined : { backgroundColor: 'var(--surface-bg)' }}
+      >
+        <CalendarDays size={10} />
+        {dueDateFormatter.format(parseDateKey(todo.dueDate))}
+      </span>
+    </button>
+  )
+}
 
 export default function TodoPage({ openTarget, onOpenTargetHandled }) {
   const { todos, addTodo, updateTodo, deleteTodo } = useTodos()
@@ -94,6 +122,10 @@ export default function TodoPage({ openTarget, onOpenTargetHandled }) {
     setModalOpen(false)
   }
 
+  const upcoming = todos
+    .filter((t) => t.dueDate && t.status !== 'done')
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+
   return (
     <div className="flex flex-col gap-3 h-full min-h-0">
       <div className="flex justify-end shrink-0">
@@ -124,6 +156,26 @@ export default function TodoPage({ openTarget, onOpenTargetHandled }) {
             canMoveRight={i < COLUMNS.length - 1}
           />
         ))}
+
+        <div className="flex flex-col gap-3 rounded-2xl p-4 glass min-h-0 flex-1">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Échéances</h3>
+            <span
+              className="text-xs font-medium px-2 py-0.5 rounded-full text-[var(--text-muted)]"
+              style={{ backgroundColor: 'var(--surface-bg)' }}
+            >
+              {upcoming.length}
+            </span>
+          </div>
+          <div className="flex flex-col gap-2 overflow-y-auto thin-scroll pr-1 flex-1 min-h-[80px]">
+            {upcoming.map((todo) => (
+              <DeadlineCard key={todo.id} todo={todo} onOpen={() => openEdit(todo)} />
+            ))}
+            {upcoming.length === 0 && (
+              <p className="text-xs text-[var(--text-faint)] text-center py-4">Aucune échéance</p>
+            )}
+          </div>
+        </div>
       </div>
 
       <TaskModal

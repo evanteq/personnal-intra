@@ -124,6 +124,11 @@ body {
   background-color: rgba(100, 116, 139, 0.3);
 }
 
+/* User-added leave / "other" calendar entries */
+.day-other {
+  background-color: rgba(20, 184, 166, 0.22);
+}
+
 .glass-hover {
   transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }

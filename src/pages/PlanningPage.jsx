@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, Repeat, X } from 'lucide-react'
-import { useTodos } from '../hooks/useTodos'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { useEvents } from '../hooks/useEvents'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useMergedList } from '../hooks/useMergedList'
-import TaskModal from '../components/todo/TaskModal'
+import EventModal from '../components/calendar/EventModal'
 import { DEFAULT_SCHOOL_WEEKS } from '../data/schoolWeeks'
 import { DEFAULT_PUBLIC_HOLIDAYS } from '../data/publicHolidays'
 import { addDays, startOfWeek, toDateKey } from '../utils/date'
@@ -11,6 +11,7 @@ import { addDays, startOfWeek, toDateKey } from '../utils/date'
 const LEGEND_ITEMS = [
   { key: 'school', label: 'Semaine école', className: 'day-school' },
   { key: 'holiday', label: 'Jour férié', className: 'day-holiday' },
+  { key: 'other', label: 'Congé / autre', className: 'day-other' },
   { key: 'weekend', label: 'Week-end', className: 'day-weekend' },
 ]
 
@@ -36,57 +37,39 @@ function getMonthGridDays(year, month) {
   return Array.from({ length: totalDays }, (_, i) => addDays(gridStart, i))
 }
 
-function TaskChip({ todo, fading, onOpen, onToggle, onUnschedule, onDragStart, onDragEnd }) {
-  const checked = fading || todo.status === 'done'
+function EventChip({ event, onOpen }) {
   return (
-    <div
-      draggable={!fading}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-      onClick={fading ? undefined : onOpen}
-      className={`group text-xs rounded-lg px-2 py-1.5 glass glass-hover flex items-start gap-1.5 ${
-        fading ? 'task-completing' : 'cursor-pointer'
-      }`}
-      title={todo.text}
+    <button
+      type="button"
+      onClick={onOpen}
+      className="w-full flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] text-left glass glass-hover"
+      title={event.title}
     >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onToggle}
-        onClick={(e) => e.stopPropagation()}
-        className="mt-0.5 shrink-0 accent-[var(--accent)]"
+      <span
+        className="w-1.5 h-1.5 rounded-full shrink-0"
+        style={{ backgroundColor: event.type === 'other' ? '#14b8a6' : 'var(--accent)' }}
       />
-      <span className="relative flex-1 min-w-0">
-        <span className={`flex items-center gap-1 truncate ${checked && !fading ? 'line-through text-[var(--text-faint)]' : 'text-[var(--text-primary)]'}`}>
-          {todo.recur && <Repeat size={10} className="shrink-0 text-[var(--text-faint)]" />}
-          <span className="truncate">{todo.text}</span>
-        </span>
-        {fading && <span className="task-strike-line" />}
-      </span>
-      {todo.dueDate && !fading && (
-        <button
-          type="button"
-          onClick={onUnschedule}
-          aria-label="Retirer du planning"
-          className="opacity-0 group-hover:opacity-100 text-[var(--text-faint)] hover:text-red-500 shrink-0"
-        >
-          <X size={11} />
-        </button>
-      )}
-    </div>
+      <span className="truncate text-[var(--text-primary)]">{event.title}</span>
+    </button>
   )
 }
 
-function MiniMonth({ year, month, todos, fadingIds, todayKey, schoolWeeks, holidayKeys, onSelect }) {
+function MiniMonth({ year, month, events, todayKey, schoolWeeks, holidayKeys, onSelect }) {
   const monthDate = new Date(year, month, 1)
   const gridDays = getMonthGridDays(year, month)
 
-  function hasTasks(key) {
-    return todos.some((t) => t.dueDate === key && (t.status !== 'done' || fadingIds.has(t.id)))
+  function eventInfo(key) {
+    const matches = events.filter((e) => key >= e.start && key <= (e.end || e.start))
+    if (matches.length === 0) return null
+    return matches.some((e) => e.type === 'other') ? '#14b8a6' : 'var(--accent)'
   }
 
   function isSchoolDay(key) {
     return schoolWeeks.some((w) => key >= w.start && key <= w.end)
+  }
+
+  function isOtherDay(key) {
+    return events.some((e) => e.type === 'other' && key >= e.start && key <= (e.end || e.start))
   }
 
   return (
@@ -109,12 +92,15 @@ function MiniMonth({ year, month, todos, fadingIds, todayKey, schoolWeeks, holid
           const inMonth = d.getMonth() === month
           const isToday = key === todayKey
           const isWeekend = d.getDay() === 0 || d.getDay() === 6
+          const dotColor = eventInfo(key)
           return (
             <span
               key={key}
               className={`relative flex items-center justify-center py-0.5 rounded ${
                 isWeekend && inMonth ? 'day-weekend' : ''
-              } ${isSchoolDay(key) && inMonth ? 'day-school' : ''} ${holidayKeys.has(key) && inMonth ? 'day-holiday' : ''}`}
+              } ${isSchoolDay(key) && inMonth ? 'day-school' : ''} ${holidayKeys.has(key) && inMonth ? 'day-holiday' : ''} ${
+                isOtherDay(key) && inMonth ? 'day-other' : ''
+              }`}
             >
               <span
                 className={`flex items-center justify-center text-[9px] ${
@@ -128,10 +114,10 @@ function MiniMonth({ year, month, todos, fadingIds, todayKey, schoolWeeks, holid
               >
                 {d.getDate()}
               </span>
-              {hasTasks(key) && (
+              {dotColor && (
                 <span
                   className="absolute left-1/2 -translate-x-1/2 bottom-0 w-1 h-1 rounded-full"
-                  style={{ backgroundColor: 'var(--accent)' }}
+                  style={{ backgroundColor: dotColor }}
                 />
               )}
             </span>
@@ -143,14 +129,12 @@ function MiniMonth({ year, month, todos, fadingIds, todayKey, schoolWeeks, holid
 }
 
 export default function PlanningPage() {
-  const { todos, addTodo, updateTodo, deleteTodo } = useTodos()
+  const { events, addEvent, updateEvent, deleteEvent } = useEvents()
   const [viewMode, setViewMode] = useLocalStorage('intra:planningView', 'week')
   const [anchor, setAnchor] = useState(() => new Date())
-  const [draggingId, setDraggingId] = useState(null)
-  const [dragOverKey, setDragOverKey] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const [editingTodo, setEditingTodo] = useState(null)
-  const [fadingIds, setFadingIds] = useState(() => new Set())
+  const [editingEvent, setEditingEvent] = useState(null)
+  const [createType, setCreateType] = useState('event')
   const [schoolWeeks] = useMergedList('intra:schoolWeeks', DEFAULT_SCHOOL_WEEKS, 'start')
   const [publicHolidays] = useMergedList('intra:publicHolidays', DEFAULT_PUBLIC_HOLIDAYS, 'date')
   const holidayKeys = useMemo(() => new Set(publicHolidays.map((h) => h.date)), [publicHolidays])
@@ -165,6 +149,14 @@ export default function PlanningPage() {
     return publicHolidays.find((h) => h.date === key)?.label
   }
 
+  function eventsForDay(key) {
+    return events.filter((e) => key >= e.start && key <= (e.end || e.start))
+  }
+
+  function isOtherDay(key) {
+    return events.some((e) => e.type === 'other' && key >= e.start && key <= (e.end || e.start))
+  }
+
   const days = useMemo(() => {
     if (viewMode === 'year') return []
     if (viewMode === 'month') return getMonthGridDays(anchor.getFullYear(), anchor.getMonth())
@@ -172,8 +164,6 @@ export default function PlanningPage() {
     const count = viewMode === 'work' ? 5 : 7
     return Array.from({ length: count }, (_, i) => addDays(weekStart, i))
   }, [anchor, viewMode])
-
-  const unscheduled = todos.filter((t) => !t.dueDate && (t.status !== 'done' || fadingIds.has(t.id)))
 
   function goPrev() {
     setAnchor((d) => {
@@ -195,30 +185,25 @@ export default function PlanningPage() {
     setAnchor(new Date())
   }
 
-  function handleDropOn(key) {
-    if (draggingId) updateTodo(draggingId, { dueDate: key })
-    setDraggingId(null)
-    setDragOverKey(null)
-  }
-
-  function openCreate() {
-    setEditingTodo(null)
+  function openCreate(type) {
+    setEditingEvent(null)
+    setCreateType(type)
     setModalOpen(true)
   }
 
-  function openEdit(todo) {
-    setEditingTodo(todo)
+  function openEdit(event) {
+    setEditingEvent(event)
     setModalOpen(true)
   }
 
   function handleSave(values) {
-    if (editingTodo) updateTodo(editingTodo.id, values)
-    else addTodo(values)
+    if (editingEvent) updateEvent(editingEvent.id, values)
+    else addEvent(values)
     setModalOpen(false)
   }
 
   function handleDelete() {
-    if (editingTodo) deleteTodo(editingTodo.id)
+    if (editingEvent) deleteEvent(editingEvent.id)
     setModalOpen(false)
   }
 
@@ -228,36 +213,6 @@ export default function PlanningPage() {
       : viewMode === 'month'
         ? monthFormatter.format(anchor)
         : `${rangeFormatter.format(days[0])} – ${rangeFormatter.format(days[days.length - 1])}`
-
-  function chipProps(todo) {
-    return {
-      todo,
-      fading: fadingIds.has(todo.id),
-      onOpen: () => openEdit(todo),
-      onToggle: (e) => {
-        e.stopPropagation()
-        if (todo.status === 'done') {
-          updateTodo(todo.id, { status: 'todo' })
-          return
-        }
-        setFadingIds((prev) => new Set(prev).add(todo.id))
-        setTimeout(() => {
-          updateTodo(todo.id, { status: 'done' })
-          setFadingIds((prev) => {
-            const next = new Set(prev)
-            next.delete(todo.id)
-            return next
-          })
-        }, 1000)
-      },
-      onUnschedule: (e) => {
-        e.stopPropagation()
-        updateTodo(todo.id, { dueDate: null })
-      },
-      onDragStart: () => setDraggingId(todo.id),
-      onDragEnd: () => setDraggingId(null),
-    }
-  }
 
   return (
     <div className="flex flex-col gap-3 h-full min-h-0">
@@ -311,11 +266,20 @@ export default function PlanningPage() {
           </div>
           <button
             type="button"
-            onClick={openCreate}
+            onClick={() => openCreate('event')}
             className="btn-accent flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium"
           >
             <Plus size={16} />
-            Ajouter une tâche
+            Événement
+          </button>
+          <button
+            type="button"
+            onClick={() => openCreate('other')}
+            className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium border"
+            style={{ borderColor: '#14b8a6', color: '#0d9488', backgroundColor: 'rgba(20,184,166,0.12)' }}
+          >
+            <Plus size={16} />
+            Congé / autre
           </button>
         </div>
       </div>
@@ -329,34 +293,7 @@ export default function PlanningPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-3 flex-1 min-h-0">
-        <div
-          onDragEnter={(e) => {
-            e.preventDefault()
-            setDragOverKey('pool')
-          }}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault()
-            if (draggingId) updateTodo(draggingId, { dueDate: null })
-            setDraggingId(null)
-            setDragOverKey(null)
-          }}
-          className={`glass glass-shadow rounded-2xl p-3 flex flex-col gap-2 min-h-0 transition-colors ${
-            dragOverKey === 'pool' ? 'ring-2 ring-[var(--accent)]' : ''
-          }`}
-        >
-          <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide shrink-0">Non planifié</h3>
-          <div className="flex flex-col gap-1.5 overflow-y-auto thin-scroll flex-1 min-h-0">
-            {unscheduled.map((t) => (
-              <TaskChip key={t.id} {...chipProps(t)} />
-            ))}
-            {unscheduled.length === 0 && (
-              <p className="text-[11px] text-[var(--text-faint)] text-center py-4">Rien à planifier</p>
-            )}
-          </div>
-        </div>
-
+      <div className="flex-1 min-h-0">
         {viewMode === 'year' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 auto-rows-fr gap-2 h-full min-h-0 overflow-y-auto thin-scroll">
             {Array.from({ length: 12 }, (_, m) => (
@@ -364,8 +301,7 @@ export default function PlanningPage() {
                 key={m}
                 year={anchor.getFullYear()}
                 month={m}
-                todos={todos}
-                fadingIds={fadingIds}
+                events={events}
                 todayKey={todayKey}
                 schoolWeeks={schoolWeeks}
                 holidayKeys={holidayKeys}
@@ -394,40 +330,28 @@ export default function PlanningPage() {
                 const isToday = key === todayKey
                 const inMonth = day.getMonth() === anchor.getMonth()
                 const isWeekend = day.getDay() === 0 || day.getDay() === 6
-                const dayTodos = todos.filter((t) => t.dueDate === key && (t.status !== 'done' || fadingIds.has(t.id)))
-                const isOver = dragOverKey === key
+                const dayEvents = eventsForDay(key)
                 return (
                   <div
                     key={key}
-                    onDragEnter={(e) => {
-                      e.preventDefault()
-                      setDragOverKey(key)
-                    }}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault()
-                      handleDropOn(key)
-                    }}
                     className={`glass rounded-xl p-2 flex flex-col gap-1.5 min-h-0 transition-colors ${
-                      isOver ? 'ring-2 ring-[var(--accent)]' : ''
-                    } ${isToday ? 'ring-2 ring-[var(--accent)]' : ''} ${isWeekend ? 'day-weekend' : ''} ${
-                      isSchoolDay(key) ? 'day-school' : ''
-                    } ${holidayKeys.has(key) ? 'day-holiday' : ''} ${!inMonth ? 'opacity-40' : ''}`}
+                      isToday ? 'ring-2 ring-[var(--accent)]' : ''
+                    } ${isWeekend ? 'day-weekend' : ''} ${isSchoolDay(key) ? 'day-school' : ''} ${
+                      holidayKeys.has(key) ? 'day-holiday' : ''
+                    } ${isOtherDay(key) ? 'day-other' : ''} ${!inMonth ? 'opacity-40' : ''}`}
                     title={holidayLabel(key)}
                   >
                     <span
                       className={`flex items-center justify-center shrink-0 text-[11px] ${
-                        isToday
-                          ? 'w-5 h-5 rounded-full font-bold text-white'
-                          : 'text-[var(--text-faint)]'
+                        isToday ? 'w-5 h-5 rounded-full font-bold text-white' : 'text-[var(--text-faint)]'
                       }`}
                       style={isToday ? { backgroundColor: 'var(--accent)' } : undefined}
                     >
                       {day.getDate()}
                     </span>
                     <div className="flex flex-col gap-1 overflow-y-auto thin-scroll flex-1 min-h-0">
-                      {dayTodos.map((t) => (
-                        <TaskChip key={t.id} {...chipProps(t)} />
+                      {dayEvents.map((ev) => (
+                        <EventChip key={ev.id} event={ev} onOpen={() => openEdit(ev)} />
                       ))}
                     </div>
                   </div>
@@ -444,24 +368,14 @@ export default function PlanningPage() {
             {days.map((day) => {
               const key = toDateKey(day)
               const isToday = key === todayKey
-              const dayTodos = todos.filter((t) => t.dueDate === key && (t.status !== 'done' || fadingIds.has(t.id)))
-              const isOver = dragOverKey === key
+              const dayEvents = eventsForDay(key)
               return (
                 <div
                   key={key}
-                  onDragEnter={(e) => {
-                    e.preventDefault()
-                    setDragOverKey(key)
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    handleDropOn(key)
-                  }}
                   className={`glass glass-shadow rounded-2xl p-2.5 flex flex-col gap-2 h-full min-h-0 transition-colors ${
-                    isOver ? 'ring-2 ring-[var(--accent)]' : ''
-                  } ${isToday ? 'ring-2 ring-[var(--accent)]' : ''} ${isSchoolDay(key) ? 'day-school' : ''} ${
-                    holidayKeys.has(key) ? 'day-holiday' : ''
+                    isToday ? 'ring-2 ring-[var(--accent)]' : ''
+                  } ${isSchoolDay(key) ? 'day-school' : ''} ${holidayKeys.has(key) ? 'day-holiday' : ''} ${
+                    isOtherDay(key) ? 'day-other' : ''
                   }`}
                   title={holidayLabel(key)}
                 >
@@ -483,8 +397,8 @@ export default function PlanningPage() {
                     </span>
                   </div>
                   <div className="flex flex-col gap-1.5 overflow-y-auto thin-scroll flex-1 min-h-0">
-                    {dayTodos.map((t) => (
-                      <TaskChip key={t.id} {...chipProps(t)} />
+                    {dayEvents.map((ev) => (
+                      <EventChip key={ev.id} event={ev} onOpen={() => openEdit(ev)} />
                     ))}
                   </div>
                 </div>
@@ -494,9 +408,10 @@ export default function PlanningPage() {
         )}
       </div>
 
-      <TaskModal
+      <EventModal
         open={modalOpen}
-        todo={editingTodo}
+        event={editingEvent}
+        defaultType={createType}
         onClose={() => setModalOpen(false)}
         onSave={handleSave}
         onDelete={handleDelete}
