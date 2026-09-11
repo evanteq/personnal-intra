@@ -147,12 +147,7 @@ export default function Dashboard({ onNavigate }) {
   const availableLinks = links.filter((l) => !quickSlots.includes(l.id))
 
   return (
-    <div className="relative flex flex-col gap-3 h-full min-h-0 overflow-y-auto thin-scroll pr-1">
-      <div
-        className="pointer-events-none absolute -top-16 left-8 w-80 h-80 rounded-full blur-3xl opacity-25 -z-10"
-        style={{ backgroundColor: 'var(--accent)' }}
-      />
-
+    <div className="flex flex-col gap-3 h-full min-h-0 overflow-y-auto thin-scroll pr-1">
       <TimezoneBanner />
 
       <div className="flex flex-wrap gap-3 shrink-0">

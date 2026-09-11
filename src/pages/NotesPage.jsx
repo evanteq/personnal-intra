@@ -139,12 +139,7 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
   }
 
   return (
-    <div className="relative flex flex-col gap-4 min-h-0 h-full">
-      <div
-        className="pointer-events-none absolute -top-16 left-8 w-72 h-72 rounded-full blur-3xl opacity-20 -z-10"
-        style={{ backgroundColor: 'var(--accent)' }}
-      />
-
+    <div className="flex flex-col gap-4 min-h-0 h-full">
       <PageHeader title="Notes" icon={NotebookPen} count={notes.length} />
 
       <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 min-h-0 flex-1">
