@@ -15,29 +15,33 @@ function AnalogFace({ now }) {
   return (
     <svg
       viewBox="0 0 100 100"
-      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-24 md:h-24 opacity-[0.14] pointer-events-none"
-      style={{ color: 'var(--text-primary)' }}
+      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 pointer-events-none"
     >
-      <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="2" />
-      {Array.from({ length: 12 }).map((_, i) => (
-        <line
-          key={i}
-          x1="50"
-          y1="6"
-          x2="50"
-          y2="12"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          transform={`rotate(${i * 30} 50 50)`}
-        />
-      ))}
+      <circle cx="50" cy="50" r="47" fill="none" stroke="var(--text-primary)" strokeOpacity="0.16" strokeWidth="1.5" />
+      {Array.from({ length: 60 }).map((_, i) => {
+        const major = i % 5 === 0
+        return (
+          <line
+            key={i}
+            x1="50"
+            y1={major ? '5' : '7'}
+            x2="50"
+            y2="10"
+            stroke="var(--text-primary)"
+            strokeOpacity={major ? 0.22 : 0.1}
+            strokeWidth={major ? 1.4 : 0.8}
+            strokeLinecap="round"
+            transform={`rotate(${i * 6} 50 50)`}
+          />
+        )
+      })}
       <line
         x1="50"
         y1="50"
         x2="50"
-        y2="26"
-        stroke="currentColor"
+        y2="28"
+        stroke="var(--text-primary)"
+        strokeOpacity="0.28"
         strokeWidth="3"
         strokeLinecap="round"
         transform={`rotate(${hourAngle} 50 50)`}
@@ -46,23 +50,25 @@ function AnalogFace({ now }) {
         x1="50"
         y1="50"
         x2="50"
-        y2="16"
-        stroke="currentColor"
+        y2="17"
+        stroke="var(--text-primary)"
+        strokeOpacity="0.22"
         strokeWidth="2"
         strokeLinecap="round"
         transform={`rotate(${minuteAngle} 50 50)`}
       />
       <line
         x1="50"
-        y1="50"
+        y1="58"
         x2="50"
-        y2="10"
-        stroke="currentColor"
+        y2="14"
+        stroke="var(--accent)"
+        strokeOpacity="0.55"
         strokeWidth="1"
         strokeLinecap="round"
         transform={`rotate(${secondAngle} 50 50)`}
       />
-      <circle cx="50" cy="50" r="2" fill="currentColor" />
+      <circle cx="50" cy="50" r="2.2" fill="var(--accent)" fillOpacity="0.55" />
     </svg>
   )
 }
