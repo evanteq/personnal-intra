@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { rotateHue } from '../utils/color'
 
 function getDefaultTheme() {
   if (typeof window === 'undefined' || !window.matchMedia) return 'dark'
@@ -21,8 +22,17 @@ export function SettingsProvider({ children }) {
   const settings = useMemo(() => ({ ...DEFAULT_SETTINGS(), ...storedSettings }), [storedSettings])
 
   useEffect(() => {
-    document.documentElement.style.setProperty('--accent', settings.accentColor)
-    document.documentElement.style.setProperty('--accent-soft', `${settings.accentColor}33`)
+    const root = document.documentElement.style
+    root.setProperty('--accent', settings.accentColor)
+    root.setProperty('--accent-soft', `${settings.accentColor}33`)
+    // Triadic harmony (+/-120deg) so the school-week and leave/other calendar
+    // tints always look intentional next to whatever accent color is chosen.
+    const school = rotateHue(settings.accentColor, 120)
+    const other = rotateHue(settings.accentColor, -120)
+    root.setProperty('--school-color', school)
+    root.setProperty('--school-soft', `${school}38`)
+    root.setProperty('--other-color', other)
+    root.setProperty('--other-soft', `${other}38`)
   }, [settings.accentColor])
 
   useEffect(() => {

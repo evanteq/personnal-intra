@@ -114,9 +114,9 @@ body {
   background-color: var(--surface-hover);
 }
 
-/* Highlight school weeks in the Planning views */
+/* Highlight school weeks in the Planning views — derived from the accent color */
 .day-school {
-  background-color: rgba(249, 115, 22, 0.22);
+  background-color: var(--school-soft, rgba(249, 115, 22, 0.22));
 }
 
 /* Public holidays take priority over the school/weekend tint */
@@ -124,9 +124,9 @@ body {
   background-color: rgba(100, 116, 139, 0.3);
 }
 
-/* User-added leave / "other" calendar entries */
+/* User-added leave / "other" calendar entries — derived from the accent color */
 .day-other {
-  background-color: rgba(20, 184, 166, 0.22);
+  background-color: var(--other-soft, rgba(20, 184, 166, 0.22));
 }
 
 .glass-hover {

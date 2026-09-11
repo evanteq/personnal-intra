@@ -47,7 +47,7 @@ function EventChip({ event, onOpen }) {
     >
       <span
         className="w-1.5 h-1.5 rounded-full shrink-0"
-        style={{ backgroundColor: event.type === 'other' ? '#14b8a6' : 'var(--accent)' }}
+        style={{ backgroundColor: event.type === 'other' ? 'var(--other-color)' : 'var(--accent)' }}
       />
       <span className="truncate text-[var(--text-primary)]">{event.title}</span>
     </button>
@@ -61,7 +61,7 @@ function MiniMonth({ year, month, events, todayKey, schoolWeeks, holidayKeys, on
   function eventInfo(key) {
     const matches = events.filter((e) => key >= e.start && key <= (e.end || e.start))
     if (matches.length === 0) return null
-    return matches.some((e) => e.type === 'other') ? '#14b8a6' : 'var(--accent)'
+    return matches.some((e) => e.type === 'other') ? 'var(--other-color)' : 'var(--accent)'
   }
 
   function isSchoolDay(key) {
@@ -276,7 +276,7 @@ export default function PlanningPage() {
             type="button"
             onClick={() => openCreate('other')}
             className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium border"
-            style={{ borderColor: '#14b8a6', color: '#0d9488', backgroundColor: 'rgba(20,184,166,0.12)' }}
+            style={{ borderColor: 'var(--other-color)', color: 'var(--other-color)', backgroundColor: 'var(--other-soft)' }}
           >
             <Plus size={16} />
             Congé / autre

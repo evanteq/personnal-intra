@@ -89,9 +89,9 @@ export default function EventModal({ open, event, defaultType, onClose, onSave, 
               onClick={() => setForm((f) => ({ ...f, type: 'other' }))}
               className="flex-1 rounded-lg border px-3 py-2 text-sm transition-colors"
               style={{
-                borderColor: isOther ? '#14b8a6' : 'var(--surface-border)',
-                backgroundColor: isOther ? 'rgba(20,184,166,0.15)' : 'var(--surface-bg)',
-                color: isOther ? '#0d9488' : 'var(--text-secondary)',
+                borderColor: isOther ? 'var(--other-color)' : 'var(--surface-border)',
+                backgroundColor: isOther ? 'var(--other-soft)' : 'var(--surface-bg)',
+                color: isOther ? 'var(--other-color)' : 'var(--text-secondary)',
               }}
             >
               Congé / autre
