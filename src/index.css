@@ -156,7 +156,12 @@ body {
 
 /* Accent-filled action button used throughout forms and panels */
 .btn-accent {
-  background: var(--accent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 80%, white) 0%,
+    var(--accent) 55%,
+    color-mix(in srgb, var(--accent) 82%, black) 100%
+  );
   color: #fff;
   box-shadow: 0 8px 20px -6px var(--accent-soft), var(--shadow-sm);
   transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;

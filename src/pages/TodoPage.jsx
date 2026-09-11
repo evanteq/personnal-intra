@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CalendarClock, CalendarDays, Plus, Repeat } from 'lucide-react'
+import { CalendarClock, CalendarDays, Kanban, Plus, Repeat } from 'lucide-react'
 import { useTodos } from '../hooks/useTodos'
 import KanbanColumn from '../components/todo/KanbanColumn'
 import TaskModal from '../components/todo/TaskModal'
@@ -7,9 +7,9 @@ import PageHeader from '../components/layout/PageHeader'
 import { parseDateKey, toDateKey } from '../utils/date'
 
 const COLUMNS = [
-  { key: 'todo', label: 'À faire' },
-  { key: 'doing', label: 'En cours' },
-  { key: 'done', label: 'Terminé' },
+  { key: 'todo', label: 'À faire', theme: 'slate' },
+  { key: 'doing', label: 'En cours', theme: 'amber' },
+  { key: 'done', label: 'Terminé', theme: 'emerald' },
 ]
 
 const dueDateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
@@ -131,9 +131,15 @@ export default function TodoPage({ openTarget, onOpenTargetHandled }) {
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
 
   return (
-    <div className="flex flex-col gap-3 h-full min-h-0">
+    <div className="relative flex flex-col gap-3 h-full min-h-0">
+      <div
+        className="pointer-events-none absolute -top-16 left-8 w-72 h-72 rounded-full blur-3xl opacity-20 -z-10"
+        style={{ backgroundColor: 'var(--accent)' }}
+      />
+
       <PageHeader
         title="Tâches"
+        icon={Kanban}
         count={todos.length}
         action={
           <button
@@ -170,6 +176,7 @@ export default function TodoPage({ openTarget, onOpenTargetHandled }) {
           <KanbanColumn
             key={col.key}
             label={col.label}
+            theme={col.theme}
             todos={todos.filter((t) => t.status === col.key)}
             onMove={(id, dir) => moveTodoByOffset(id, dir)}
             onDelete={deleteTodo}

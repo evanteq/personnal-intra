@@ -47,7 +47,7 @@ export default function CategoryTabs({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b border-[var(--surface-border)]">
+    <div className="flex flex-wrap items-center gap-1.5 pb-3 border-b border-[var(--surface-border)]">
       {categories.map((cat) => {
         const isActive = cat.id === activeId
         const isEditing = editingId === cat.id
@@ -71,13 +71,14 @@ export default function CategoryTabs({
               setDragId(null)
               setOverId(null)
             }}
-            className={`flex items-center gap-1.5 px-3 py-2.5 -mb-px text-sm font-medium border-b-2 transition-colors rounded-t-lg ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
               isActive
-                ? 'border-[var(--accent)] text-[var(--text-primary)]'
-                : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'text-[var(--accent)] shadow-[var(--shadow-sm)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
             } ${editMode ? 'cursor-grab active:cursor-grabbing' : ''} ${
-              overId === cat.id && dragId !== cat.id ? 'bg-[var(--surface-hover)]' : ''
+              overId === cat.id && dragId !== cat.id ? 'ring-2 ring-[var(--accent)]' : ''
             }`}
+            style={isActive ? { backgroundColor: 'var(--accent-soft)' } : undefined}
           >
             {isEditing ? (
               <>
@@ -106,8 +107,8 @@ export default function CategoryTabs({
                     <span
                       className="px-1.5 py-0.5 rounded-full text-[10px] font-normal leading-none"
                       style={{
-                        backgroundColor: isActive ? 'var(--accent-soft)' : 'var(--surface-bg)',
-                        color: isActive ? 'var(--accent)' : 'var(--text-faint)',
+                        backgroundColor: isActive ? 'var(--accent)' : 'var(--surface-bg)',
+                        color: isActive ? '#fff' : 'var(--text-faint)',
                       }}
                     >
                       {count}
@@ -145,7 +146,7 @@ export default function CategoryTabs({
       })}
 
       {addingNew ? (
-        <div className="flex items-center gap-1.5 px-3 py-2.5 -mb-px text-sm border-b-2 border-transparent">
+        <div className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-xl" style={{ backgroundColor: 'var(--surface-bg)' }}>
           <input
             autoFocus
             placeholder="Nom de la catégorie"
@@ -167,7 +168,7 @@ export default function CategoryTabs({
       ) : (
         <button
           onClick={() => setAddingNew(true)}
-          className="flex items-center gap-1 px-3 py-2.5 -mb-px text-sm border-b-2 border-transparent text-[var(--text-faint)] hover:text-[var(--text-primary)]"
+          className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm text-[var(--text-faint)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
         >
           <Plus size={14} />
           Catégorie
@@ -181,9 +182,10 @@ export default function CategoryTabs({
         }}
         aria-label={editMode ? 'Terminer la modification des catégories' : 'Modifier les catégories'}
         title={editMode ? 'Terminer' : 'Modifier les catégories'}
-        className={`flex items-center gap-1 px-2.5 py-2.5 -mb-px ml-auto text-sm border-b-2 border-transparent transition-colors ${
-          editMode ? 'text-[var(--accent)]' : 'text-[var(--text-faint)] hover:text-[var(--text-primary)]'
+        className={`flex items-center gap-1 px-2.5 py-2 rounded-xl ml-auto text-sm transition-colors ${
+          editMode ? 'text-[var(--accent)]' : 'text-[var(--text-faint)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
         }`}
+        style={editMode ? { backgroundColor: 'var(--accent-soft)' } : undefined}
       >
         {editMode ? <Check size={14} /> : <Pencil size={14} />}
       </button>

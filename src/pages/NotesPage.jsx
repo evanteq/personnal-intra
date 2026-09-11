@@ -8,6 +8,21 @@ import PageHeader from '../components/layout/PageHeader'
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
+const TAG_PALETTE = [
+  { fg: '#38bdf8', bg: 'rgba(56, 189, 248, 0.16)' },
+  { fg: '#34d399', bg: 'rgba(52, 211, 153, 0.16)' },
+  { fg: '#f59e0b', bg: 'rgba(245, 158, 11, 0.16)' },
+  { fg: '#fb7185', bg: 'rgba(251, 113, 133, 0.16)' },
+  { fg: '#a78bfa', bg: 'rgba(167, 139, 250, 0.16)' },
+  { fg: '#22d3ee', bg: 'rgba(34, 211, 238, 0.16)' },
+]
+
+function tagColor(tag) {
+  let hash = 0
+  for (let i = 0; i < tag.length; i++) hash = (hash * 31 + tag.charCodeAt(i)) >>> 0
+  return TAG_PALETTE[hash % TAG_PALETTE.length]
+}
+
 function normalizeNotes(raw) {
   if (Array.isArray(raw)) return raw.map((n) => ({ tags: [], ...n }))
   return DEFAULT_NOTES
@@ -124,8 +139,13 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 min-h-0 h-full">
-      <PageHeader title="Notes" count={notes.length} />
+    <div className="relative flex flex-col gap-4 min-h-0 h-full">
+      <div
+        className="pointer-events-none absolute -top-16 left-8 w-72 h-72 rounded-full blur-3xl opacity-20 -z-10"
+        style={{ backgroundColor: 'var(--accent)' }}
+      />
+
+      <PageHeader title="Notes" icon={NotebookPen} count={notes.length} />
 
       <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 min-h-0 flex-1">
       <div className="glass glass-shadow rounded-2xl p-3 flex flex-col gap-2 min-h-0">
@@ -144,22 +164,22 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
               Filtrer par tag {activeTag ? `(${activeTag})` : ''}
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {allTags.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => setActiveTag((t) => (t === tag ? null : tag))}
-                className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] transition-colors"
-                style={
-                  activeTag === tag
-                    ? { backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' }
-                    : { backgroundColor: 'var(--surface-bg)', color: 'var(--text-muted)' }
-                }
-              >
-                <Tag size={9} />
-                {tag}
-              </button>
-              ))}
+              {allTags.map((tag) => {
+                const c = tagColor(tag)
+                const active = activeTag === tag
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setActiveTag((t) => (t === tag ? null : tag))}
+                    className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] transition-colors"
+                    style={active ? { backgroundColor: c.fg, color: '#fff' } : { backgroundColor: c.bg, color: c.fg }}
+                  >
+                    <Tag size={9} />
+                    {tag}
+                  </button>
+                )
+              })}
             </div>
           </div>
         )}
@@ -174,8 +194,8 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
                 <button
                   type="button"
                   onClick={() => setSelectedId(note.id)}
-                  className={`group w-full text-left rounded-xl px-3 py-2.5 transition-colors ${
-                    active ? '' : 'hover:bg-[var(--surface-hover)]'
+                  className={`group w-full text-left rounded-xl px-3 py-2.5 transition-all ${
+                    active ? 'shadow-[var(--shadow-sm)]' : 'hover:bg-[var(--surface-hover)] hover:-translate-y-0.5'
                   }`}
                   style={active ? { backgroundColor: 'var(--accent-soft)' } : undefined}
                 >
@@ -234,23 +254,26 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
             />
 
             <div className="flex flex-wrap items-center gap-1.5">
-              {(selected.tags || []).map((tag) => (
-                <span
-                  key={tag}
-                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px]"
-                  style={{ backgroundColor: 'var(--surface-bg)', color: 'var(--text-muted)' }}
-                >
-                  #{tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(selected.id, tag)}
-                    aria-label={`Retirer le tag ${tag}`}
-                    className="hover:text-red-500"
+              {(selected.tags || []).map((tag) => {
+                const c = tagColor(tag)
+                return (
+                  <span
+                    key={tag}
+                    className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px]"
+                    style={{ backgroundColor: c.bg, color: c.fg }}
                   >
-                    <X size={10} />
-                  </button>
-                </span>
-              ))}
+                    #{tag}
+                    <button
+                      type="button"
+                      onClick={() => removeTag(selected.id, tag)}
+                      aria-label={`Retirer le tag ${tag}`}
+                      className="hover:text-red-500"
+                    >
+                      <X size={10} />
+                    </button>
+                  </span>
+                )
+              })}
               <input
                 value={tagDraft}
                 onChange={(e) => setTagDraft(e.target.value)}

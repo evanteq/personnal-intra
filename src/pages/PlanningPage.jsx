@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, Repeat } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, Plus, Repeat } from 'lucide-react'
 import { useEvents } from '../hooks/useEvents'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useMergedList } from '../hooks/useMergedList'
@@ -54,17 +54,15 @@ function eventOccursOn(event, key) {
 }
 
 function EventChip({ event, onOpen }) {
+  const color = event.type === 'other' ? 'var(--other-color)' : 'var(--accent)'
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="w-full flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] text-left glass glass-hover"
+      className="w-full flex items-center gap-1.5 rounded-lg pl-2 pr-2 py-1 text-[11px] text-left glass glass-hover"
+      style={{ borderLeftWidth: '3px', borderLeftColor: color }}
       title={event.title}
     >
-      <span
-        className="w-1.5 h-1.5 rounded-full shrink-0"
-        style={{ backgroundColor: event.type === 'other' ? 'var(--other-color)' : 'var(--accent)' }}
-      />
       {event.time && <span className="text-[var(--text-faint)] shrink-0">{event.time}</span>}
       <span className="truncate flex-1 text-[var(--text-primary)]">{event.title}</span>
       {event.recur && <Repeat size={10} className="text-[var(--text-faint)] shrink-0" />}
@@ -244,8 +242,13 @@ export default function PlanningPage({ openTarget, onOpenTargetHandled }) {
         : `${rangeFormatter.format(days[0])} – ${rangeFormatter.format(days[days.length - 1])}`
 
   return (
-    <div className="flex flex-col gap-3 h-full min-h-0">
-      <PageHeader title="Calendrier" />
+    <div className="relative flex flex-col gap-3 h-full min-h-0">
+      <div
+        className="pointer-events-none absolute -top-16 left-8 w-72 h-72 rounded-full blur-3xl opacity-20 -z-10"
+        style={{ backgroundColor: 'var(--accent)' }}
+      />
+
+      <PageHeader title="Calendrier" icon={CalendarDays} />
 
       <div className="glass glass-shadow rounded-2xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2">
@@ -361,6 +364,14 @@ export default function PlanningPage({ openTarget, onOpenTargetHandled }) {
                     } ${isWeekend ? 'day-weekend' : ''} ${isSchoolDay(key) ? 'day-school' : ''} ${
                       holidayKeys.has(key) ? 'day-holiday' : ''
                     } ${isOtherDay(key) ? 'day-other' : ''} ${!inMonth ? 'opacity-40' : ''}`}
+                    style={
+                      isToday
+                        ? {
+                            backgroundImage:
+                              'linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 45%), radial-gradient(ellipse at 30% 0%, var(--accent-soft), transparent 60%)',
+                          }
+                        : undefined
+                    }
                     title={holidayLabel(key)}
                   >
                     <span
@@ -399,6 +410,14 @@ export default function PlanningPage({ openTarget, onOpenTargetHandled }) {
                   } ${isSchoolDay(key) ? 'day-school' : ''} ${holidayKeys.has(key) ? 'day-holiday' : ''} ${
                     isOtherDay(key) ? 'day-other' : ''
                   }`}
+                  style={
+                    isToday
+                      ? {
+                          backgroundImage:
+                            'linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 45%), radial-gradient(ellipse at 30% 0%, var(--accent-soft), transparent 60%)',
+                        }
+                      : undefined
+                  }
                   title={holidayLabel(key)}
                 >
                   <div className="flex items-center justify-between shrink-0">
