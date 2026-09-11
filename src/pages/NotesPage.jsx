@@ -49,6 +49,11 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
     }
   }, [notes, selectedId])
 
+  // Avoid an unsent tag draft from one note bleeding visually into the next.
+  useEffect(() => {
+    setTagDraft('')
+  }, [selectedId])
+
   const selected = notes.find((n) => n.id === selectedId) ?? null
 
   // The editable area is uncontrolled (to keep the caret stable while typing);
@@ -94,7 +99,7 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
   }
 
   function addTag(id, tag) {
-    const clean = tag.trim().toLowerCase()
+    const clean = tag.replace(/,/g, '').trim().toLowerCase()
     if (!clean) return
     const note = notes.find((n) => n.id === id)
     if (!note || (note.tags || []).includes(clean)) return
@@ -130,8 +135,12 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
         </button>
 
         {allTags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-1">
-            {allTags.map((tag) => (
+          <div className="mt-1">
+            <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wide mb-1">
+              Filtrer par tag {activeTag ? `(${activeTag})` : ''}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {allTags.map((tag) => (
               <button
                 key={tag}
                 type="button"
@@ -146,7 +155,8 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
                 <Tag size={9} />
                 {tag}
               </button>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
