@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { GripVertical, Pencil, Trash2 } from 'lucide-react'
+import { Check, Copy, GripVertical, Pencil, Trash2 } from 'lucide-react'
 import { getIcon } from '../../data/iconOptions'
 import { getFaviconUrl } from '../../utils/favicon'
 
 export default function ShortcutCard({ link, onEdit, onDelete, dragHandlers, isDragOver, isHighlighted }) {
   const [confirming, setConfirming] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [faviconFailed, setFaviconFailed] = useState(false)
   const Icon = getIcon(link.icon)
   const faviconUrl = !link.icon && !faviconFailed ? getFaviconUrl(link.url) : null
@@ -20,6 +21,15 @@ export default function ShortcutCard({ link, onEdit, onDelete, dragHandlers, isD
     }
   }
 
+  function handleCopy(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    navigator.clipboard?.writeText(link.url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+
   return (
     <a
       href={link.url}
@@ -27,7 +37,7 @@ export default function ShortcutCard({ link, onEdit, onDelete, dragHandlers, isD
       rel="noopener noreferrer"
       draggable
       {...dragHandlers}
-      className={`group relative flex flex-col gap-3 rounded-2xl p-4 glass glass-hover shadow-[var(--shadow-sm)] animate-fade-in cursor-pointer transition-shadow ${
+      className={`group relative flex flex-col gap-3 rounded-2xl p-4 glass glass-hover shadow-[var(--shadow-sm)] animate-fade-in cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)] ${
         isDragOver ? 'ring-2 ring-[var(--accent)]' : ''
       } ${isHighlighted ? 'ring-2 ring-[var(--accent)]' : ''}`}
     >
@@ -49,6 +59,14 @@ export default function ShortcutCard({ link, onEdit, onDelete, dragHandlers, isD
           )}
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={handleCopy}
+            aria-label="Copier le lien"
+            className={`p-1.5 rounded-lg hover:bg-[var(--surface-hover)] ${copied ? 'text-emerald-500' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+            title={copied ? 'Copié !' : 'Copier le lien'}
+          >
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+          </button>
           <button
             onClick={(e) => {
               e.preventDefault()

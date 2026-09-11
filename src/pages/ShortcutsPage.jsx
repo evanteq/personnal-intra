@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Search, X } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DEFAULT_CATEGORIES, DEFAULT_LINKS } from '../data/defaultData'
 import { uid } from '../utils/id'
@@ -14,12 +15,14 @@ export default function ShortcutsPage({ openTarget, onOpenTargetHandled }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingLink, setEditingLink] = useState(null)
   const [highlightId, setHighlightId] = useState(null)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     if (openTarget?.type !== 'shortcut') return
     const link = links.find((l) => l.id === openTarget.id)
     if (!link) return
     setActiveCategory(link.categoryId)
+    setQuery('')
     setHighlightId(link.id)
     onOpenTargetHandled?.()
     const timer = setTimeout(() => setHighlightId(null), 2000)
@@ -27,12 +30,27 @@ export default function ShortcutsPage({ openTarget, onOpenTargetHandled }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openTarget])
 
+  useEffect(() => {
+    setQuery('')
+  }, [activeCategory])
+
   const currentCategoryId = categories.some((c) => c.id === activeCategory) ? activeCategory : categories[0]?.id
 
-  const visibleLinks = useMemo(
-    () => links.filter((l) => l.categoryId === currentCategoryId).sort((a, b) => a.order - b.order),
-    [links, currentCategoryId],
-  )
+  const linkCounts = useMemo(() => {
+    const counts = {}
+    links.forEach((l) => {
+      counts[l.categoryId] = (counts[l.categoryId] ?? 0) + 1
+    })
+    return counts
+  }, [links])
+
+  const q = query.trim().toLowerCase()
+
+  const visibleLinks = useMemo(() => {
+    const inCategory = links.filter((l) => l.categoryId === currentCategoryId).sort((a, b) => a.order - b.order)
+    if (!q) return inCategory
+    return inCategory.filter((l) => l.title.toLowerCase().includes(q) || l.url.toLowerCase().includes(q))
+  }, [links, currentCategoryId, q])
 
   function openCreateModal() {
     setEditingLink(null)
@@ -91,6 +109,18 @@ export default function ShortcutsPage({ openTarget, onOpenTargetHandled }) {
     setLinks((prev) => prev.filter((l) => l.categoryId !== id))
   }
 
+  function reorderCategories(dragId, targetId) {
+    setCategories((prev) => {
+      const fromIndex = prev.findIndex((c) => c.id === dragId)
+      const toIndex = prev.findIndex((c) => c.id === targetId)
+      if (fromIndex === -1 || toIndex === -1) return prev
+      const reordered = [...prev]
+      const [moved] = reordered.splice(fromIndex, 1)
+      reordered.splice(toIndex, 0, moved)
+      return reordered
+    })
+  }
+
   return (
     <div className="flex flex-col gap-4 min-h-0 h-full">
       <CategoryTabs
@@ -100,7 +130,27 @@ export default function ShortcutsPage({ openTarget, onOpenTargetHandled }) {
         onAddCategory={addCategory}
         onRenameCategory={renameCategory}
         onDeleteCategory={deleteCategory}
+        onReorderCategories={reorderCategories}
+        linkCounts={linkCounts}
       />
+
+      {(linkCounts[currentCategoryId] ?? 0) > 5 && (
+        <div className="flex items-center gap-2 -mt-2 rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2">
+          <Search size={14} className="text-[var(--text-muted)] shrink-0" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filtrer les raccourcis de cette catégorie…"
+            className="w-full bg-transparent outline-none text-sm text-[var(--text-primary)] placeholder:text-[var(--text-faint)]"
+          />
+          {query && (
+            <button onClick={() => setQuery('')} className="text-[var(--text-faint)] hover:text-[var(--text-primary)] shrink-0">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
+
       <ShortcutGrid
         links={visibleLinks}
         onEdit={openEditModal}
@@ -108,6 +158,7 @@ export default function ShortcutsPage({ openTarget, onOpenTargetHandled }) {
         onReorder={reorderLinks}
         onAddClick={openCreateModal}
         highlightId={highlightId}
+        filtered={!!q}
       />
 
       <LinkFormModal

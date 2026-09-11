@@ -1,12 +1,23 @@
 import { useState } from 'react'
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react'
 
-export default function CategoryTabs({ categories, activeId, onSelect, onAddCategory, onRenameCategory, onDeleteCategory }) {
+export default function CategoryTabs({
+  categories,
+  activeId,
+  onSelect,
+  onAddCategory,
+  onRenameCategory,
+  onDeleteCategory,
+  onReorderCategories,
+  linkCounts,
+}) {
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState('')
   const [addingNew, setAddingNew] = useState(false)
   const [newDraft, setNewDraft] = useState('')
   const [editMode, setEditMode] = useState(false)
+  const [dragId, setDragId] = useState(null)
+  const [overId, setOverId] = useState(null)
 
   function startEdit(cat) {
     setEditingId(cat.id)
@@ -27,18 +38,45 @@ export default function CategoryTabs({ categories, activeId, onSelect, onAddCate
     setAddingNew(false)
   }
 
+  function handleDrop(targetId) {
+    if (dragId && dragId !== targetId) {
+      onReorderCategories?.(dragId, targetId)
+    }
+    setDragId(null)
+    setOverId(null)
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-1 border-b border-[var(--surface-border)]">
       {categories.map((cat) => {
         const isActive = cat.id === activeId
         const isEditing = editingId === cat.id
+        const count = linkCounts?.[cat.id] ?? 0
         return (
           <div
             key={cat.id}
-            className={`flex items-center gap-1.5 px-3 py-2.5 -mb-px text-sm font-medium border-b-2 transition-colors ${
+            draggable={editMode && !isEditing}
+            onDragStart={() => setDragId(cat.id)}
+            onDragEnter={(e) => {
+              if (!editMode) return
+              e.preventDefault()
+              setOverId(cat.id)
+            }}
+            onDragOver={(e) => editMode && e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault()
+              handleDrop(cat.id)
+            }}
+            onDragEnd={() => {
+              setDragId(null)
+              setOverId(null)
+            }}
+            className={`flex items-center gap-1.5 px-3 py-2.5 -mb-px text-sm font-medium border-b-2 transition-colors rounded-t-lg ${
               isActive
                 ? 'border-[var(--accent)] text-[var(--text-primary)]'
                 : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            } ${editMode ? 'cursor-grab active:cursor-grabbing' : ''} ${
+              overId === cat.id && dragId !== cat.id ? 'bg-[var(--surface-hover)]' : ''
             }`}
           >
             {isEditing ? (
@@ -62,7 +100,20 @@ export default function CategoryTabs({ categories, activeId, onSelect, onAddCate
               </>
             ) : (
               <>
-                <button onClick={() => onSelect(cat.id)}>{cat.name}</button>
+                <button onClick={() => onSelect(cat.id)} className="flex items-center gap-1.5">
+                  {cat.name}
+                  {count > 0 && (
+                    <span
+                      className="px-1.5 py-0.5 rounded-full text-[10px] font-normal leading-none"
+                      style={{
+                        backgroundColor: isActive ? 'var(--accent-soft)' : 'var(--surface-bg)',
+                        color: isActive ? 'var(--accent)' : 'var(--text-faint)',
+                      }}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
                 {editMode && (
                   <span className="flex items-center gap-1 ml-1">
                     <button

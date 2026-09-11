@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, SearchX } from 'lucide-react'
 import ShortcutCard from './ShortcutCard'
 
-export default function ShortcutGrid({ links, onEdit, onDelete, onReorder, onAddClick, highlightId }) {
+export default function ShortcutGrid({ links, onEdit, onDelete, onReorder, onAddClick, highlightId, filtered }) {
   const [dragId, setDragId] = useState(null)
   const [overId, setOverId] = useState(null)
 
@@ -12,6 +12,15 @@ export default function ShortcutGrid({ links, onEdit, onDelete, onReorder, onAdd
     }
     setDragId(null)
     setOverId(null)
+  }
+
+  if (filtered && links.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-2 text-[var(--text-faint)]">
+        <SearchX size={28} />
+        <p className="text-sm">Aucun raccourci ne correspond à cette recherche.</p>
+      </div>
+    )
   }
 
   return (
