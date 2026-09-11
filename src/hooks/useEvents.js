@@ -5,7 +5,10 @@ export function useEvents() {
   const [events, setEvents] = useLocalStorage('intra:events', [])
 
   function addEvent(values) {
-    setEvents((prev) => [...prev, { id: uid(), type: 'event', description: '', createdAt: Date.now(), ...values }])
+    setEvents((prev) => [
+      ...prev,
+      { id: uid(), type: 'event', description: '', time: '', recur: null, createdAt: Date.now(), ...values },
+    ])
   }
 
   function updateEvent(id, patch) {

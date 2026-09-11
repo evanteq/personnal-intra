@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ChevronLeft, ChevronRight, Plus, Repeat } from 'lucide-react'
 import { useEvents } from '../hooks/useEvents'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useMergedList } from '../hooks/useMergedList'
 import EventModal from '../components/calendar/EventModal'
 import { DEFAULT_SCHOOL_WEEKS } from '../data/schoolWeeks'
 import { DEFAULT_PUBLIC_HOLIDAYS } from '../data/publicHolidays'
-import { addDays, startOfWeek, toDateKey } from '../utils/date'
+import { addDays, parseDateKey, startOfWeek, toDateKey } from '../utils/date'
 
 const LEGEND_ITEMS = [
   { key: 'school', label: 'Semaine école', className: 'day-school' },
@@ -37,6 +37,21 @@ function getMonthGridDays(year, month) {
   return Array.from({ length: totalDays }, (_, i) => addDays(gridStart, i))
 }
 
+// Non-recurring entries use their start/end range as-is; recurring ones are
+// virtually expanded (no duplicated data) by checking the pattern against `key`.
+function eventOccursOn(event, key) {
+  if (!event.recur) return key >= event.start && key <= (event.end || event.start)
+  if (key < event.start) return false
+  const start = parseDateKey(event.start)
+  const target = parseDateKey(key)
+  const diffDays = Math.round((target - start) / 86400000)
+  if (event.recur === 'daily') return diffDays >= 0
+  if (event.recur === 'weekly') return diffDays >= 0 && diffDays % 7 === 0
+  if (event.recur === 'monthly') return target.getDate() === start.getDate()
+  if (event.recur === 'yearly') return target.getDate() === start.getDate() && target.getMonth() === start.getMonth()
+  return false
+}
+
 function EventChip({ event, onOpen }) {
   return (
     <button
@@ -49,7 +64,9 @@ function EventChip({ event, onOpen }) {
         className="w-1.5 h-1.5 rounded-full shrink-0"
         style={{ backgroundColor: event.type === 'other' ? 'var(--other-color)' : 'var(--accent)' }}
       />
-      <span className="truncate text-[var(--text-primary)]">{event.title}</span>
+      {event.time && <span className="text-[var(--text-faint)] shrink-0">{event.time}</span>}
+      <span className="truncate flex-1 text-[var(--text-primary)]">{event.title}</span>
+      {event.recur && <Repeat size={10} className="text-[var(--text-faint)] shrink-0" />}
     </button>
   )
 }
@@ -59,7 +76,7 @@ function MiniMonth({ year, month, events, todayKey, schoolWeeks, holidayKeys, on
   const gridDays = getMonthGridDays(year, month)
 
   function eventInfo(key) {
-    const matches = events.filter((e) => key >= e.start && key <= (e.end || e.start))
+    const matches = events.filter((e) => eventOccursOn(e, key))
     if (matches.length === 0) return null
     return matches.some((e) => e.type === 'other') ? 'var(--other-color)' : 'var(--accent)'
   }
@@ -69,7 +86,7 @@ function MiniMonth({ year, month, events, todayKey, schoolWeeks, holidayKeys, on
   }
 
   function isOtherDay(key) {
-    return events.some((e) => e.type === 'other' && key >= e.start && key <= (e.end || e.start))
+    return events.some((e) => e.type === 'other' && eventOccursOn(e, key))
   }
 
   return (
@@ -128,7 +145,7 @@ function MiniMonth({ year, month, events, todayKey, schoolWeeks, holidayKeys, on
   )
 }
 
-export default function PlanningPage() {
+export default function PlanningPage({ openTarget, onOpenTargetHandled }) {
   const { events, addEvent, updateEvent, deleteEvent } = useEvents()
   const [viewMode, setViewMode] = useLocalStorage('intra:planningView', 'week')
   const [anchor, setAnchor] = useState(() => new Date())
@@ -141,6 +158,17 @@ export default function PlanningPage() {
 
   const todayKey = toDateKey(new Date())
 
+  useEffect(() => {
+    if (openTarget?.type !== 'calendarEvent') return
+    const event = events.find((e) => e.id === openTarget.id)
+    if (!event) return
+    setAnchor(parseDateKey(event.start))
+    setEditingEvent(event)
+    setModalOpen(true)
+    onOpenTargetHandled?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openTarget])
+
   function isSchoolDay(key) {
     return schoolWeeks.some((w) => key >= w.start && key <= w.end)
   }
@@ -150,11 +178,11 @@ export default function PlanningPage() {
   }
 
   function eventsForDay(key) {
-    return events.filter((e) => key >= e.start && key <= (e.end || e.start))
+    return events.filter((e) => eventOccursOn(e, key))
   }
 
   function isOtherDay(key) {
-    return events.some((e) => e.type === 'other' && key >= e.start && key <= (e.end || e.start))
+    return events.some((e) => e.type === 'other' && eventOccursOn(e, key))
   }
 
   const days = useMemo(() => {
@@ -271,15 +299,6 @@ export default function PlanningPage() {
           >
             <Plus size={16} />
             Événement
-          </button>
-          <button
-            type="button"
-            onClick={() => openCreate('other')}
-            className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium border"
-            style={{ borderColor: 'var(--other-color)', color: 'var(--other-color)', backgroundColor: 'var(--other-soft)' }}
-          >
-            <Plus size={16} />
-            Congé / autre
           </button>
         </div>
       </div>

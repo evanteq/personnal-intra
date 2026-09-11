@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Kanban, NotebookPen, Search, X } from 'lucide-react'
+import { CalendarDays, Kanban, NotebookPen, Search, X } from 'lucide-react'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { useTodos } from '../../hooks/useTodos'
+import { useEvents } from '../../hooks/useEvents'
 import { DEFAULT_CATEGORIES, DEFAULT_LINKS, DEFAULT_NOTES } from '../../data/defaultData'
 import { getIcon } from '../../data/iconOptions'
 import { getFaviconUrl } from '../../utils/favicon'
@@ -15,6 +16,7 @@ export default function GlobalSearch({ open, onClose, onSelect }) {
   const [categories] = useLocalStorage('intra:categories', DEFAULT_CATEGORIES)
   const [notes] = useLocalStorage('intra:notes', DEFAULT_NOTES)
   const { todos } = useTodos()
+  const { events } = useEvents()
 
   useEffect(() => {
     if (open) setQuery('')
@@ -43,7 +45,9 @@ export default function GlobalSearch({ open, onClose, onSelect }) {
         .slice(0, MAX_PER_GROUP)
     : []
   const matchedTodos = q ? todos.filter((t) => t.text.toLowerCase().includes(q)).slice(0, MAX_PER_GROUP) : []
-  const hasResults = matchedLinks.length > 0 || matchedNotes.length > 0 || matchedTodos.length > 0
+  const matchedEvents = q ? events.filter((e) => e.title.toLowerCase().includes(q)).slice(0, MAX_PER_GROUP) : []
+  const hasResults =
+    matchedLinks.length > 0 || matchedNotes.length > 0 || matchedTodos.length > 0 || matchedEvents.length > 0
 
   function go(page, type, id) {
     onSelect({ page, type, id })
@@ -140,7 +144,7 @@ export default function GlobalSearch({ open, onClose, onSelect }) {
           )}
 
           {matchedTodos.length > 0 && (
-            <div>
+            <div className="mb-2">
               <p className="px-2 py-1 text-[10px] font-semibold text-[var(--text-faint)] uppercase tracking-wide">Tâches</p>
               {matchedTodos.map((todo) => (
                 <button
@@ -156,6 +160,33 @@ export default function GlobalSearch({ open, onClose, onSelect }) {
                     <Kanban size={13} className="text-[var(--accent)]" />
                   </div>
                   <p className="text-sm text-[var(--text-primary)] truncate">{todo.text}</p>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {matchedEvents.length > 0 && (
+            <div>
+              <p className="px-2 py-1 text-[10px] font-semibold text-[var(--text-faint)] uppercase tracking-wide">
+                Calendrier
+              </p>
+              {matchedEvents.map((event) => (
+                <button
+                  key={event.id}
+                  type="button"
+                  onClick={() => go('planning', 'calendarEvent', event.id)}
+                  className="w-full flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-[var(--surface-hover)] text-left"
+                >
+                  <div
+                    className="flex items-center justify-center w-7 h-7 rounded-lg shrink-0"
+                    style={{ backgroundColor: 'var(--accent-soft)' }}
+                  >
+                    <CalendarDays size={13} className="text-[var(--accent)]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm text-[var(--text-primary)] truncate">{event.title}</p>
+                    <p className="text-[11px] text-[var(--text-faint)] truncate">{event.start}</p>
+                  </div>
                 </button>
               ))}
             </div>

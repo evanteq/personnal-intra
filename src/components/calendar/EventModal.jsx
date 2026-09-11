@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Trash2, X } from 'lucide-react'
 
-const EMPTY = { title: '', type: 'event', start: '', end: '', description: '' }
+const EMPTY = { title: '', type: 'event', start: '', end: '', time: '', recur: '', description: '' }
+const RECUR_OPTIONS = [
+  { value: '', label: 'Aucune' },
+  { value: 'daily', label: 'Chaque jour' },
+  { value: 'weekly', label: 'Chaque semaine' },
+  { value: 'monthly', label: 'Chaque mois' },
+  { value: 'yearly', label: 'Chaque année' },
+]
 
 export default function EventModal({ open, event, defaultType, onClose, onSave, onDelete }) {
   const [form, setForm] = useState(EMPTY)
@@ -16,6 +23,8 @@ export default function EventModal({ open, event, defaultType, onClose, onSave, 
               type: event.type,
               start: event.start,
               end: event.end || event.start,
+              time: event.time || '',
+              recur: event.recur || '',
               description: event.description || '',
             }
           : { ...EMPTY, type: defaultType || 'event' },
@@ -34,7 +43,9 @@ export default function EventModal({ open, event, defaultType, onClose, onSave, 
       title,
       type: form.type,
       start: form.start,
-      end: form.end || form.start,
+      end: form.recur ? form.start : form.end || form.start,
+      time: form.time,
+      recur: form.recur || null,
       description: form.description.trim(),
     })
   }
@@ -121,15 +132,48 @@ export default function EventModal({ open, event, defaultType, onClose, onSave, 
               />
             </div>
             <div>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Heure (optionnel)</label>
+              <input
+                type="time"
+                value={form.time}
+                onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
+                className="w-full rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+              />
+            </div>
+            <div>
               <label className="block text-xs text-[var(--text-muted)] mb-1">Date fin (optionnel)</label>
               <input
                 type="date"
                 value={form.end}
+                disabled={!!form.recur}
                 onChange={(e) => setForm((f) => ({ ...f, end: e.target.value }))}
-                className="w-full rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+                className="w-full rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] disabled:opacity-50"
               />
             </div>
+            <div>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Répéter</label>
+              <select
+                value={form.recur}
+                onChange={(e) => setForm((f) => ({ ...f, recur: e.target.value }))}
+                className="w-full rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+              >
+                {RECUR_OPTIONS.map((opt) => (
+                  <option
+                    key={opt.value}
+                    value={opt.value}
+                    style={{ backgroundColor: 'var(--modal-bg)', color: 'var(--text-primary)' }}
+                  >
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+          {form.recur && (
+            <p className="text-[11px] text-[var(--text-faint)] -mt-2">
+              Un événement récurrent ne couvre qu&rsquo;un seul jour à la fois ; la date de fin est ignorée.
+            </p>
+          )}
 
           <div>
             <label className="block text-xs text-[var(--text-muted)] mb-1">Description</label>

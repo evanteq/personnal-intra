@@ -3,6 +3,7 @@ import { Download, Loader2, LocateFixed, Moon, RotateCcw, Search, Sun, Upload, X
 import { useSettings } from '../../context/SettingsContext'
 import AccentColorPicker from './AccentColorPicker'
 import BackgroundPicker from './BackgroundPicker'
+import CalendarDataSection from './CalendarDataSection'
 
 export default function SettingsPanel({ open, onClose }) {
   const { settings, setWeatherLocation, setTheme } = useSettings()
@@ -202,6 +203,8 @@ export default function SettingsPanel({ open, onClose }) {
             </ul>
           )}
         </section>
+
+        <CalendarDataSection />
 
         <section className="flex flex-col gap-3 mt-8 pt-6 border-t border-[var(--surface-border)]">
           <h3 className="text-sm font-medium text-[var(--text-secondary)]">Données</h3>
