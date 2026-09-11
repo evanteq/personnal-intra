@@ -7,7 +7,7 @@ const PAGE_DEFS = {
   dashboard: { label: 'Accueil', icon: LayoutDashboard },
   shortcuts: { label: 'Raccourcis', icon: Link2 },
   notes: { label: 'Notes', icon: NotebookPen },
-  planning: { label: 'Planning', icon: CalendarDays },
+  planning: { label: 'Calendrier', icon: CalendarDays },
   todo: { label: 'Tâches', icon: Kanban },
 }
 

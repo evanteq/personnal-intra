@@ -91,7 +91,7 @@ function MiniMonth({ year, month, todos, fadingIds, todayKey, schoolWeeks, holid
     <button
       type="button"
       onClick={() => onSelect(monthDate)}
-      className="glass glass-hover rounded-xl p-2.5 flex flex-col gap-1.5 text-left"
+      className="glass glass-hover rounded-xl p-2.5 flex flex-col justify-center gap-1.5 text-left h-full"
     >
       <p className="text-xs font-semibold text-[var(--text-primary)] capitalize px-0.5">
         {monthLongFormatter.format(monthDate)}
@@ -351,7 +351,7 @@ export default function PlanningPage() {
         </div>
 
         {viewMode === 'year' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 min-h-0 content-start overflow-y-auto thin-scroll">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 auto-rows-fr gap-2 h-full min-h-0 overflow-y-auto thin-scroll">
             {Array.from({ length: 12 }, (_, m) => (
               <MiniMonth
                 key={m}
@@ -370,7 +370,7 @@ export default function PlanningPage() {
             ))}
           </div>
         ) : viewMode === 'month' ? (
-          <div className="flex flex-col gap-2 min-h-0">
+          <div className="flex flex-col gap-2 h-full min-h-0">
             <div className="grid grid-cols-7 gap-2 shrink-0 px-0.5">
               {days.slice(0, 7).map((d) => (
                 <span
@@ -381,7 +381,7 @@ export default function PlanningPage() {
                 </span>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-2 min-h-0 flex-1 overflow-y-auto thin-scroll auto-rows-[minmax(90px,auto)]">
+            <div className="grid grid-cols-7 gap-2 min-h-0 flex-1 overflow-y-auto thin-scroll auto-rows-[minmax(90px,1fr)]">
               {days.map((day) => {
                 const key = toDateKey(day)
                 const isToday = key === todayKey
@@ -427,7 +427,7 @@ export default function PlanningPage() {
           <div
             className={`grid grid-cols-1 sm:grid-cols-2 ${
               viewMode === 'work' ? 'lg:grid-cols-5' : 'lg:grid-cols-7'
-            } gap-2 min-h-0 overflow-y-auto thin-scroll`}
+            } auto-rows-[minmax(140px,1fr)] gap-2 h-full min-h-0 overflow-y-auto thin-scroll`}
           >
             {days.map((day) => {
               const key = toDateKey(day)
@@ -446,7 +446,7 @@ export default function PlanningPage() {
                     e.preventDefault()
                     handleDropOn(key)
                   }}
-                  className={`glass glass-shadow rounded-2xl p-2.5 flex flex-col gap-2 min-h-[170px] lg:min-h-0 transition-colors ${
+                  className={`glass glass-shadow rounded-2xl p-2.5 flex flex-col gap-2 h-full min-h-0 transition-colors ${
                     isOver ? 'ring-2 ring-[var(--accent)]' : ''
                   } ${isSchoolDay(key) ? 'day-school' : ''} ${holidayKeys.has(key) ? 'day-holiday' : ''}`}
                   title={holidayLabel(key)}
