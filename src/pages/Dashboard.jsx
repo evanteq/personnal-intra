@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, CircleCheck, GripVertical, Link2, ListTodo, NotebookPen, Sparkles, X } from 'lucide-react'
+import { ArrowRight, CircleCheck, GripVertical, Link2, ListTodo, Newspaper, NotebookPen, Sparkles, X } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useDailyNews } from '../hooks/useDailyNews'
 import { DEFAULT_CATEGORIES, DEFAULT_LINKS, DEFAULT_NOTES, DEFAULT_TODOS } from '../data/defaultData'
 import { getIcon } from '../data/iconOptions'
 import { getFaviconUrl } from '../utils/favicon'
@@ -64,6 +65,53 @@ function SectionCard({ title, onSeeAll, children, className = '' }) {
         </button>
       </div>
       {children}
+    </div>
+  )
+}
+
+function NewsCard() {
+  const { items, loading, error } = useDailyNews()
+
+  return (
+    <div className="glass glass-shadow rounded-2xl p-4 flex flex-col gap-2 shrink-0">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Newspaper size={15} className="text-[var(--accent)]" />
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">Nouveautés</h3>
+        </div>
+        {items.length > 0 && <span className="text-[10px] text-[var(--text-faint)]">Aujourd&rsquo;hui</span>}
+      </div>
+
+      {items.length === 0 && loading && (
+        <p className="text-xs text-[var(--text-faint)] text-center py-3">Chargement des actualités…</p>
+      )}
+      {items.length === 0 && error && (
+        <p className="text-xs text-[var(--text-faint)] text-center py-3">Actualités indisponibles pour le moment.</p>
+      )}
+
+      {items.length > 0 && (
+        <ul className="flex flex-col gap-1 max-h-52 overflow-y-auto thin-scroll pr-1">
+          {items.map((item, i) => (
+            <li key={i}>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-2 rounded-lg px-1.5 py-1.5 hover:bg-[var(--surface-hover)] transition-colors"
+              >
+                <span
+                  className="mt-1.5 shrink-0 w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: item.category === 'digital' ? 'var(--other-color)' : 'var(--accent)' }}
+                />
+                <div className="min-w-0">
+                  <p className="text-xs text-[var(--text-secondary)] leading-snug line-clamp-2">{item.title}</p>
+                  {item.source && <p className="text-[10px] text-[var(--text-faint)] mt-0.5 truncate">{item.source}</p>}
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
@@ -272,6 +320,8 @@ export default function Dashboard({ onNavigate }) {
               <p className="text-xs text-[var(--text-faint)] text-center py-4">Aucune note pour le moment</p>
             )}
           </SectionCard>
+
+          <NewsCard />
 
           <div className="glass glass-shadow rounded-2xl p-4 flex flex-col gap-2 shrink-0">
             <div className="flex items-center gap-2">
