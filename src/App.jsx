@@ -48,8 +48,8 @@ function AppShell() {
   const isDark = settings.theme !== 'light'
   const orbBlend = isDark ? 'black' : 'white'
   const arcBlend = isDark ? 'white' : 'black'
-  const arcColor = `color-mix(in srgb, color-mix(in srgb, var(--accent) 22%, ${arcBlend}) 38%, transparent)`
-  const orbColor = `color-mix(in srgb, color-mix(in srgb, var(--accent) 35%, ${orbBlend}) 45%, transparent)`
+  const arcColor = `color-mix(in srgb, color-mix(in srgb, var(--accent) 22%, ${arcBlend}) 23%, transparent)`
+  const orbColor = `color-mix(in srgb, color-mix(in srgb, var(--accent) 35%, ${orbBlend}) 27%, transparent)`
 
   const backgroundStyle =
     settings.background.type === 'default'
