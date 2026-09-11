@@ -247,42 +247,55 @@ export default function PlanningPage() {
         </div>
 
         {viewMode === 'month' ? (
-          <div className="grid grid-cols-7 gap-2 min-h-0 overflow-y-auto thin-scroll auto-rows-[minmax(90px,auto)]">
-            {days.map((day) => {
-              const key = toDateKey(day)
-              const isToday = key === todayKey
-              const inMonth = day.getMonth() === anchor.getMonth()
-              const dayTodos = todos.filter((t) => t.dueDate === key && (t.status !== 'done' || fadingIds.has(t.id)))
-              const isOver = dragOverKey === key
-              return (
-                <div
-                  key={key}
-                  onDragEnter={(e) => {
-                    e.preventDefault()
-                    setDragOverKey(key)
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    handleDropOn(key)
-                  }}
-                  className={`glass rounded-xl p-2 flex flex-col gap-1.5 min-h-0 transition-colors ${
-                    isOver ? 'ring-2 ring-[var(--accent)]' : ''
-                  } ${!inMonth ? 'opacity-40' : ''}`}
+          <div className="flex flex-col gap-2 min-h-0">
+            <div className="grid grid-cols-7 gap-2 shrink-0 px-0.5">
+              {days.slice(0, 7).map((d) => (
+                <span
+                  key={toDateKey(d)}
+                  className="text-[11px] font-semibold text-[var(--text-faint)] text-center capitalize"
                 >
-                  <span
-                    className={`text-[11px] font-semibold shrink-0 ${isToday ? 'text-[var(--accent)]' : 'text-[var(--text-faint)]'}`}
+                  {dayNameFormatter.format(d)}
+                </span>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-2 min-h-0 flex-1 overflow-y-auto thin-scroll auto-rows-[minmax(90px,auto)]">
+              {days.map((day) => {
+                const key = toDateKey(day)
+                const isToday = key === todayKey
+                const inMonth = day.getMonth() === anchor.getMonth()
+                const isWeekend = day.getDay() === 0 || day.getDay() === 6
+                const dayTodos = todos.filter((t) => t.dueDate === key && (t.status !== 'done' || fadingIds.has(t.id)))
+                const isOver = dragOverKey === key
+                return (
+                  <div
+                    key={key}
+                    onDragEnter={(e) => {
+                      e.preventDefault()
+                      setDragOverKey(key)
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      handleDropOn(key)
+                    }}
+                    className={`glass rounded-xl p-2 flex flex-col gap-1.5 min-h-0 transition-colors ${
+                      isOver ? 'ring-2 ring-[var(--accent)]' : ''
+                    } ${isWeekend ? 'day-weekend' : ''} ${!inMonth ? 'opacity-40' : ''}`}
                   >
-                    {day.getDate()}
-                  </span>
-                  <div className="flex flex-col gap-1 overflow-y-auto thin-scroll flex-1 min-h-0">
-                    {dayTodos.map((t) => (
-                      <TaskChip key={t.id} {...chipProps(t)} />
-                    ))}
+                    <span
+                      className={`text-[11px] font-semibold shrink-0 ${isToday ? 'text-[var(--accent)]' : 'text-[var(--text-faint)]'}`}
+                    >
+                      {day.getDate()}
+                    </span>
+                    <div className="flex flex-col gap-1 overflow-y-auto thin-scroll flex-1 min-h-0">
+                      {dayTodos.map((t) => (
+                        <TaskChip key={t.id} {...chipProps(t)} />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         ) : (
           <div
