@@ -15,7 +15,7 @@ export function useTodos() {
   function addTodo(values, status = 'todo') {
     setTodos((prev) => [
       ...prev,
-      { id: uid(), status, createdAt: Date.now(), dueDate: null, description: '', recur: null, ...values },
+      { id: uid(), status, createdAt: Date.now(), dueDate: null, dueTime: null, description: '', recur: null, ...values },
     ])
   }
 
@@ -33,6 +33,7 @@ export function useTodos() {
           status: 'todo',
           recur: current.recur,
           dueDate: advanceDateKey(current.dueDate, current.recur),
+          dueTime: current.dueTime || null,
           createdAt: Date.now(),
         })
       }

@@ -37,6 +37,7 @@ function DeadlineCard({ todo, onOpen }) {
       {todo.recur && <Repeat size={11} className="text-[var(--text-faint)] shrink-0" />}
       <span className={`text-xs shrink-0 ${overdue ? 'text-red-500 font-medium' : 'text-[var(--text-faint)]'}`}>
         {dueDateFormatter.format(parseDateKey(todo.dueDate))}
+        {todo.dueTime && ` · ${todo.dueTime}`}
       </span>
     </button>
   )
@@ -128,7 +129,7 @@ export default function TodoPage({ openTarget, onOpenTargetHandled }) {
 
   const upcoming = todos
     .filter((t) => t.dueDate && t.status !== 'done')
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate) || (a.dueTime || '').localeCompare(b.dueTime || ''))
 
   return (
     <div className="flex flex-col gap-3 h-full min-h-0">

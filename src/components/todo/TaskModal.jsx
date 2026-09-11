@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Trash2, X } from 'lucide-react'
 
-const EMPTY = { text: '', description: '', dueDate: '', recur: '' }
+const EMPTY = { text: '', description: '', dueDate: '', dueTime: '', recur: '' }
 const RECUR_OPTIONS = [
   { value: '', label: 'Aucune' },
   { value: 'daily', label: 'Chaque jour' },
@@ -24,7 +24,13 @@ export default function TaskModal({ open, todo, onClose, onSave, onDelete }) {
     if (open) {
       setForm(
         todo
-          ? { text: todo.text, description: todo.description || '', dueDate: todo.dueDate || '', recur: todo.recur || '' }
+          ? {
+              text: todo.text,
+              description: todo.description || '',
+              dueDate: todo.dueDate || '',
+              dueTime: todo.dueTime || '',
+              recur: todo.recur || '',
+            }
           : EMPTY,
       )
       setConfirmingDelete(false)
@@ -37,7 +43,13 @@ export default function TaskModal({ open, todo, onClose, onSave, onDelete }) {
     e.preventDefault()
     const text = form.text.trim()
     if (!text) return
-    onSave({ text, description: form.description.trim(), dueDate: form.dueDate || null, recur: form.recur || null })
+    onSave({
+      text,
+      description: form.description.trim(),
+      dueDate: form.dueDate || null,
+      dueTime: form.dueDate ? form.dueTime || null : null,
+      recur: form.recur || null,
+    })
   }
 
   function handleDelete() {
@@ -90,14 +102,24 @@ export default function TaskModal({ open, todo, onClose, onSave, onDelete }) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-xs text-[var(--text-muted)] mb-1">Date assignée</label>
               <input
                 type="date"
                 value={form.dueDate}
-                onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value, dueTime: e.target.value ? f.dueTime : '' }))}
                 className="w-full rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Heure</label>
+              <input
+                type="time"
+                value={form.dueTime}
+                onChange={(e) => setForm((f) => ({ ...f, dueTime: e.target.value }))}
+                disabled={!form.dueDate}
+                className="w-full rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] disabled:opacity-50"
               />
             </div>
             <div>

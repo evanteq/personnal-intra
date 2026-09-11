@@ -51,6 +51,7 @@ export default function KanbanCard({ todo, canMoveLeft, canMoveRight, onMove, on
             >
               <CalendarDays size={10} />
               {dueDateFormatter.format(parseDateKey(todo.dueDate))}
+              {todo.dueTime && ` · ${todo.dueTime}`}
             </span>
           )}
           {todo.recur && (
