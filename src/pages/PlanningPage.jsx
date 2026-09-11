@@ -4,7 +4,14 @@ import { useTodos } from '../hooks/useTodos'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import TaskModal from '../components/todo/TaskModal'
 import { DEFAULT_SCHOOL_WEEKS } from '../data/schoolWeeks'
+import { DEFAULT_PUBLIC_HOLIDAYS } from '../data/publicHolidays'
 import { addDays, startOfWeek, toDateKey } from '../utils/date'
+
+const LEGEND_ITEMS = [
+  { key: 'school', label: 'Semaine école', className: 'day-school' },
+  { key: 'holiday', label: 'Jour férié', className: 'day-holiday' },
+  { key: 'weekend', label: 'Week-end', className: 'day-weekend' },
+]
 
 const dayNameFormatter = new Intl.DateTimeFormat('fr-FR', { weekday: 'short' })
 const weekdayNarrowFormatter = new Intl.DateTimeFormat('fr-FR', { weekday: 'narrow' })
@@ -68,7 +75,7 @@ function TaskChip({ todo, fading, onOpen, onToggle, onUnschedule, onDragStart, o
   )
 }
 
-function MiniMonth({ year, month, todos, fadingIds, todayKey, schoolWeeks, onSelect }) {
+function MiniMonth({ year, month, todos, fadingIds, todayKey, schoolWeeks, holidayKeys, onSelect }) {
   const monthDate = new Date(year, month, 1)
   const gridDays = getMonthGridDays(year, month)
 
@@ -109,7 +116,9 @@ function MiniMonth({ year, month, todos, fadingIds, todayKey, schoolWeeks, onSel
                   : inMonth
                     ? 'text-[var(--text-secondary)]'
                     : 'text-[var(--text-faint)] opacity-40'
-              } ${isWeekend && inMonth ? 'day-weekend' : ''} ${isSchoolDay(key) && inMonth ? 'day-school' : ''}`}
+              } ${isWeekend && inMonth ? 'day-weekend' : ''} ${isSchoolDay(key) && inMonth ? 'day-school' : ''} ${
+                holidayKeys.has(key) && inMonth ? 'day-holiday' : ''
+              }`}
             >
               {d.getDate()}
               {hasTasks(key) && (
@@ -136,11 +145,17 @@ export default function PlanningPage() {
   const [editingTodo, setEditingTodo] = useState(null)
   const [fadingIds, setFadingIds] = useState(() => new Set())
   const [schoolWeeks] = useLocalStorage('intra:schoolWeeks', DEFAULT_SCHOOL_WEEKS)
+  const [publicHolidays] = useLocalStorage('intra:publicHolidays', DEFAULT_PUBLIC_HOLIDAYS)
+  const holidayKeys = useMemo(() => new Set(publicHolidays.map((h) => h.date)), [publicHolidays])
 
   const todayKey = toDateKey(new Date())
 
   function isSchoolDay(key) {
     return schoolWeeks.some((w) => key >= w.start && key <= w.end)
+  }
+
+  function holidayLabel(key) {
+    return publicHolidays.find((h) => h.date === key)?.label
   }
 
   const days = useMemo(() => {
@@ -240,15 +255,7 @@ export default function PlanningPage() {
   return (
     <div className="flex flex-col gap-3 h-full min-h-0">
       <div className="glass glass-shadow rounded-2xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shrink-0">
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={goPrev}
-            className="p-1.5 rounded-lg hover:bg-[var(--surface-hover)] text-[var(--text-muted)]"
-            aria-label="Précédent"
-          >
-            <ChevronLeft size={16} />
-          </button>
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={goToday}
@@ -256,15 +263,25 @@ export default function PlanningPage() {
           >
             Aujourd&rsquo;hui
           </button>
-          <button
-            type="button"
-            onClick={goNext}
-            className="p-1.5 rounded-lg hover:bg-[var(--surface-hover)] text-[var(--text-muted)]"
-            aria-label="Suivant"
-          >
-            <ChevronRight size={16} />
-          </button>
-          <p className="text-sm font-semibold text-[var(--text-primary)] capitalize ml-2">{headerLabel}</p>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={goPrev}
+              className="p-1.5 rounded-lg hover:bg-[var(--surface-hover)] text-[var(--text-muted)]"
+              aria-label="Précédent"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <p className="text-sm font-semibold text-[var(--text-primary)] capitalize px-1">{headerLabel}</p>
+            <button
+              type="button"
+              onClick={goNext}
+              className="p-1.5 rounded-lg hover:bg-[var(--surface-hover)] text-[var(--text-muted)]"
+              aria-label="Suivant"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -294,6 +311,15 @@ export default function PlanningPage() {
             Ajouter une tâche
           </button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 shrink-0">
+        {LEGEND_ITEMS.map((item) => (
+          <span key={item.key} className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+            <span className={`w-2.5 h-2.5 rounded-sm shrink-0 ${item.className}`} />
+            {item.label}
+          </span>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-3 flex-1 min-h-0">
@@ -335,6 +361,7 @@ export default function PlanningPage() {
                 fadingIds={fadingIds}
                 todayKey={todayKey}
                 schoolWeeks={schoolWeeks}
+                holidayKeys={holidayKeys}
                 onSelect={(monthDate) => {
                   setAnchor(monthDate)
                   setViewMode('month')
@@ -376,7 +403,10 @@ export default function PlanningPage() {
                     }}
                     className={`glass rounded-xl p-2 flex flex-col gap-1.5 min-h-0 transition-colors ${
                       isOver ? 'ring-2 ring-[var(--accent)]' : ''
-                    } ${isWeekend ? 'day-weekend' : ''} ${isSchoolDay(key) ? 'day-school' : ''} ${!inMonth ? 'opacity-40' : ''}`}
+                    } ${isWeekend ? 'day-weekend' : ''} ${isSchoolDay(key) ? 'day-school' : ''} ${
+                      holidayKeys.has(key) ? 'day-holiday' : ''
+                    } ${!inMonth ? 'opacity-40' : ''}`}
+                    title={holidayLabel(key)}
                   >
                     <span
                       className={`text-[11px] font-semibold shrink-0 ${isToday ? 'text-[var(--accent)]' : 'text-[var(--text-faint)]'}`}
@@ -418,7 +448,8 @@ export default function PlanningPage() {
                   }}
                   className={`glass glass-shadow rounded-2xl p-2.5 flex flex-col gap-2 min-h-[170px] lg:min-h-0 transition-colors ${
                     isOver ? 'ring-2 ring-[var(--accent)]' : ''
-                  } ${isSchoolDay(key) ? 'day-school' : ''}`}
+                  } ${isSchoolDay(key) ? 'day-school' : ''} ${holidayKeys.has(key) ? 'day-holiday' : ''}`}
+                  title={holidayLabel(key)}
                 >
                   <div className="flex items-baseline justify-between shrink-0">
                     <span

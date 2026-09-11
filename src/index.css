@@ -119,6 +119,11 @@ body {
   background-color: rgba(249, 115, 22, 0.22);
 }
 
+/* Public holidays take priority over the school/weekend tint */
+.day-holiday {
+  background-color: rgba(100, 116, 139, 0.3);
+}
+
 .glass-hover {
   transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
