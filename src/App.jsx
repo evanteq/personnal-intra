@@ -48,13 +48,15 @@ function AppShell() {
   const isDark = settings.theme !== 'light'
   const orbBlend = isDark ? 'black' : 'white'
   const arcBlend = isDark ? 'white' : 'black'
+  const arcColor = `color-mix(in srgb, color-mix(in srgb, var(--accent) 22%, ${arcBlend}) 38%, transparent)`
+  const orbColor = `color-mix(in srgb, color-mix(in srgb, var(--accent) 35%, ${orbBlend}) 45%, transparent)`
 
   const backgroundStyle =
     settings.background.type === 'default'
       ? {
           backgroundImage: [
-            `radial-gradient(80vmax circle at 22% 128%, transparent 54.5%, color-mix(in srgb, var(--accent) 55%, ${arcBlend}) 56%, transparent 57.5%)`,
-            `radial-gradient(ellipse 62% 52% at 74% 20%, color-mix(in srgb, var(--accent) 80%, ${orbBlend}) 0%, transparent 70%)`,
+            `radial-gradient(85vmax circle at 22% 130%, transparent 52%, ${arcColor} 55.5%, transparent 60%)`,
+            `radial-gradient(ellipse 55% 45% at 74% 20%, ${orbColor} 0%, transparent 65%)`,
             'radial-gradient(circle at 20% 20%, var(--bg-from) 0%, var(--bg-via) 55%, var(--bg-to) 100%)',
           ].join(', '),
         }
