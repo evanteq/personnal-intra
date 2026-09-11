@@ -6,14 +6,26 @@ import TaskModal from '../components/todo/TaskModal'
 import { addDays, startOfWeek, toDateKey } from '../utils/date'
 
 const dayNameFormatter = new Intl.DateTimeFormat('fr-FR', { weekday: 'short' })
+const weekdayNarrowFormatter = new Intl.DateTimeFormat('fr-FR', { weekday: 'narrow' })
 const rangeFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' })
 const monthFormatter = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' })
+const monthLongFormatter = new Intl.DateTimeFormat('fr-FR', { month: 'long' })
 
 const VIEW_OPTIONS = [
   { key: 'work', label: 'Semaine de travail' },
   { key: 'week', label: 'Semaine' },
   { key: 'month', label: 'Mois' },
+  { key: 'year', label: 'Année' },
 ]
+
+function getMonthGridDays(year, month) {
+  const firstOfMonth = new Date(year, month, 1)
+  const lastOfMonth = new Date(year, month + 1, 0)
+  const gridStart = startOfWeek(firstOfMonth)
+  const gridEndWeekStart = startOfWeek(lastOfMonth)
+  const totalDays = Math.round((addDays(gridEndWeekStart, 6) - gridStart) / 86400000) + 1
+  return Array.from({ length: totalDays }, (_, i) => addDays(gridStart, i))
+}
 
 function TaskChip({ todo, fading, onOpen, onToggle, onUnschedule, onDragStart, onDragEnd }) {
   const checked = fading || todo.status === 'done'
@@ -55,6 +67,60 @@ function TaskChip({ todo, fading, onOpen, onToggle, onUnschedule, onDragStart, o
   )
 }
 
+function MiniMonth({ year, month, todos, fadingIds, todayKey, onSelect }) {
+  const monthDate = new Date(year, month, 1)
+  const gridDays = getMonthGridDays(year, month)
+
+  function hasTasks(key) {
+    return todos.some((t) => t.dueDate === key && (t.status !== 'done' || fadingIds.has(t.id)))
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(monthDate)}
+      className="glass glass-hover rounded-xl p-2.5 flex flex-col gap-1.5 text-left"
+    >
+      <p className="text-xs font-semibold text-[var(--text-primary)] capitalize px-0.5">
+        {monthLongFormatter.format(monthDate)}
+      </p>
+      <div className="grid grid-cols-7 gap-y-0.5">
+        {gridDays.slice(0, 7).map((d) => (
+          <span key={`h-${toDateKey(d)}`} className="text-[9px] text-[var(--text-faint)] text-center">
+            {weekdayNarrowFormatter.format(d)}
+          </span>
+        ))}
+        {gridDays.map((d) => {
+          const key = toDateKey(d)
+          const inMonth = d.getMonth() === month
+          const isToday = key === todayKey
+          const isWeekend = d.getDay() === 0 || d.getDay() === 6
+          return (
+            <span
+              key={key}
+              className={`relative text-[9px] text-center rounded py-0.5 ${
+                isToday
+                  ? 'font-bold text-[var(--accent)]'
+                  : inMonth
+                    ? 'text-[var(--text-secondary)]'
+                    : 'text-[var(--text-faint)] opacity-40'
+              } ${isWeekend && inMonth ? 'day-weekend' : ''}`}
+            >
+              {d.getDate()}
+              {hasTasks(key) && (
+                <span
+                  className="absolute left-1/2 -translate-x-1/2 bottom-0 w-1 h-1 rounded-full"
+                  style={{ backgroundColor: 'var(--accent)' }}
+                />
+              )}
+            </span>
+          )
+        })}
+      </div>
+    </button>
+  )
+}
+
 export default function PlanningPage() {
   const { todos, addTodo, updateTodo, deleteTodo } = useTodos()
   const [viewMode, setViewMode] = useLocalStorage('intra:planningView', 'week')
@@ -68,16 +134,8 @@ export default function PlanningPage() {
   const todayKey = toDateKey(new Date())
 
   const days = useMemo(() => {
-    if (viewMode === 'month') {
-      const year = anchor.getFullYear()
-      const month = anchor.getMonth()
-      const firstOfMonth = new Date(year, month, 1)
-      const lastOfMonth = new Date(year, month + 1, 0)
-      const gridStart = startOfWeek(firstOfMonth)
-      const gridEndWeekStart = startOfWeek(lastOfMonth)
-      const totalDays = Math.round((addDays(gridEndWeekStart, 6) - gridStart) / 86400000) + 1
-      return Array.from({ length: totalDays }, (_, i) => addDays(gridStart, i))
-    }
+    if (viewMode === 'year') return []
+    if (viewMode === 'month') return getMonthGridDays(anchor.getFullYear(), anchor.getMonth())
     const weekStart = startOfWeek(anchor)
     const count = viewMode === 'work' ? 5 : 7
     return Array.from({ length: count }, (_, i) => addDays(weekStart, i))
@@ -86,11 +144,19 @@ export default function PlanningPage() {
   const unscheduled = todos.filter((t) => !t.dueDate && (t.status !== 'done' || fadingIds.has(t.id)))
 
   function goPrev() {
-    setAnchor((d) => (viewMode === 'month' ? new Date(d.getFullYear(), d.getMonth() - 1, 1) : addDays(d, -7)))
+    setAnchor((d) => {
+      if (viewMode === 'year') return new Date(d.getFullYear() - 1, d.getMonth(), 1)
+      if (viewMode === 'month') return new Date(d.getFullYear(), d.getMonth() - 1, 1)
+      return addDays(d, -7)
+    })
   }
 
   function goNext() {
-    setAnchor((d) => (viewMode === 'month' ? new Date(d.getFullYear(), d.getMonth() + 1, 1) : addDays(d, 7)))
+    setAnchor((d) => {
+      if (viewMode === 'year') return new Date(d.getFullYear() + 1, d.getMonth(), 1)
+      if (viewMode === 'month') return new Date(d.getFullYear(), d.getMonth() + 1, 1)
+      return addDays(d, 7)
+    })
   }
 
   function goToday() {
@@ -125,9 +191,11 @@ export default function PlanningPage() {
   }
 
   const headerLabel =
-    viewMode === 'month'
-      ? monthFormatter.format(anchor)
-      : `${rangeFormatter.format(days[0])} – ${rangeFormatter.format(days[days.length - 1])}`
+    viewMode === 'year'
+      ? String(anchor.getFullYear())
+      : viewMode === 'month'
+        ? monthFormatter.format(anchor)
+        : `${rangeFormatter.format(days[0])} – ${rangeFormatter.format(days[days.length - 1])}`
 
   function chipProps(todo) {
     return {
@@ -246,7 +314,24 @@ export default function PlanningPage() {
           </div>
         </div>
 
-        {viewMode === 'month' ? (
+        {viewMode === 'year' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 min-h-0 content-start overflow-y-auto thin-scroll">
+            {Array.from({ length: 12 }, (_, m) => (
+              <MiniMonth
+                key={m}
+                year={anchor.getFullYear()}
+                month={m}
+                todos={todos}
+                fadingIds={fadingIds}
+                todayKey={todayKey}
+                onSelect={(monthDate) => {
+                  setAnchor(monthDate)
+                  setViewMode('month')
+                }}
+              />
+            ))}
+          </div>
+        ) : viewMode === 'month' ? (
           <div className="flex flex-col gap-2 min-h-0">
             <div className="grid grid-cols-7 gap-2 shrink-0 px-0.5">
               {days.slice(0, 7).map((d) => (
