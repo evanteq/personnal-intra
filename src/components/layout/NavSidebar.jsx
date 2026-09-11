@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CalendarDays, Kanban, LayoutDashboard, Link2, NotebookPen } from 'lucide-react'
+import { CalendarDays, GripVertical, Kanban, LayoutDashboard, Link2, NotebookPen } from 'lucide-react'
 import ateqLogo from '../../assets/ateq-logo.png'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 
@@ -67,13 +67,19 @@ export default function NavSidebar({ page, onNavigate }) {
                 setDragOverKey(null)
               }}
               onClick={() => onNavigate(key)}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors flex-1 md:flex-none cursor-grab active:cursor-grabbing ${
+              className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors flex-1 md:flex-none ${
                 active ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
               } ${isOver ? 'ring-2 ring-[var(--accent)]' : ''}`}
               style={active ? { backgroundColor: 'var(--accent-soft)' } : undefined}
             >
               <Icon size={18} className="shrink-0" style={active ? { color: 'var(--accent)' } : undefined} />
               <span className="hidden sm:inline">{label}</span>
+              <span
+                className="hidden sm:flex absolute top-1 right-1 text-[var(--text-faint)] opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Glisser pour réordonner"
+              >
+                <GripVertical size={12} />
+              </span>
             </button>
           )
         })}

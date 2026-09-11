@@ -28,17 +28,25 @@ export default function KanbanCard({ todo, canMoveLeft, canMoveRight, onMove, on
       }`}
     >
       <div className="flex items-start gap-2">
-        <GripVertical size={14} className="text-[var(--text-faint)] mt-0.5 shrink-0" />
         <p className="flex-1 min-w-0 text-sm text-[var(--text-primary)] break-words">{todo.text}</p>
-        <button
-          onClick={handleDelete}
-          aria-label="Supprimer la tâche"
-          className={`shrink-0 p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-[var(--surface-hover)] ${
-            confirming ? 'text-red-500 opacity-100' : 'text-[var(--text-faint)] hover:text-red-500'
+        <div
+          className={`flex items-center gap-1 shrink-0 transition-opacity ${
+            confirming ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
         >
-          <Trash2 size={13} />
-        </button>
+          <button
+            onClick={handleDelete}
+            aria-label="Supprimer la tâche"
+            className={`p-1 rounded-lg hover:bg-[var(--surface-hover)] ${
+              confirming ? 'text-red-500' : 'text-[var(--text-faint)] hover:text-red-500'
+            }`}
+          >
+            <Trash2 size={13} />
+          </button>
+          <span className="p-1 text-[var(--text-faint)]" title="Glisser pour réordonner">
+            <GripVertical size={14} />
+          </span>
+        </div>
       </div>
       {(todo.dueDate || todo.recur) && (
         <div className="flex flex-wrap items-center gap-1.5">

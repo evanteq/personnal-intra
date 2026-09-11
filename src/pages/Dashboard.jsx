@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, CircleCheck, Link2, ListTodo, NotebookPen, Sparkles, X } from 'lucide-react'
+import { ArrowRight, CircleCheck, GripVertical, Link2, ListTodo, NotebookPen, Sparkles, X } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DEFAULT_CATEGORIES, DEFAULT_LINKS, DEFAULT_NOTES, DEFAULT_TODOS } from '../data/defaultData'
 import { getIcon } from '../data/iconOptions'
@@ -188,23 +188,28 @@ export default function Dashboard({ onNavigate }) {
                       setDragIndex(null)
                       setDragOverIndex(null)
                     }}
-                    className={`group relative flex flex-col items-center justify-center gap-1.5 rounded-xl p-2 h-full w-full hover:bg-[var(--surface-hover)] hover:scale-[1.05] hover:shadow-[0_8px_20px_-8px_var(--accent-soft)] transition-all duration-150 cursor-grab active:cursor-grabbing ${
+                    className={`group relative flex flex-col items-center justify-center gap-1.5 rounded-xl p-2 h-full w-full hover:bg-[var(--surface-hover)] hover:scale-[1.05] hover:shadow-[0_8px_20px_-8px_var(--accent-soft)] transition-all duration-150 ${
                       isDragOver ? 'ring-2 ring-[var(--accent)]' : ''
                     }`}
                     title={link.title}
                   >
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        clearSlot(index)
-                      }}
-                      aria-label="Retirer des raccourcis rapides"
-                      className="absolute top-0.5 right-0.5 p-0.5 rounded opacity-0 group-hover:opacity-100 text-[var(--text-faint)] hover:text-red-500 transition-opacity"
-                    >
-                      <X size={11} />
-                    </button>
+                    <div className="absolute top-0.5 right-0.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="p-0.5 text-[var(--text-faint)]" title="Glisser pour réordonner">
+                        <GripVertical size={11} />
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          clearSlot(index)
+                        }}
+                        aria-label="Retirer des raccourcis rapides"
+                        className="p-0.5 rounded text-[var(--text-faint)] hover:text-red-500"
+                      >
+                        <X size={11} />
+                      </button>
+                    </div>
                     <div
                       className="flex items-center justify-center w-9 h-9 rounded-lg overflow-hidden shrink-0"
                       style={{ backgroundColor: 'var(--accent-soft)' }}

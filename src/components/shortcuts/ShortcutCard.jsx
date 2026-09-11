@@ -86,7 +86,7 @@ export default function ShortcutCard({ link, onEdit, onDelete, dragHandlers, isD
           >
             <Trash2 size={14} />
           </button>
-          <span className="p-1.5 text-[var(--text-faint)] cursor-grab active:cursor-grabbing" title="Glisser pour réordonner">
+          <span className="p-1.5 text-[var(--text-faint)]" title="Glisser pour réordonner">
             <GripVertical size={14} />
           </span>
         </div>

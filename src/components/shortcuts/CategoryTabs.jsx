@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Check, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react'
 
 export default function CategoryTabs({
   categories,
@@ -71,7 +71,7 @@ export default function CategoryTabs({
               setDragId(null)
               setOverId(null)
             }}
-            className={`flex items-center gap-1 rounded-xl transition-colors ${editMode ? 'cursor-grab active:cursor-grabbing' : ''} ${
+            className={`flex items-center gap-1 rounded-xl transition-colors ${
               overId === cat.id && dragId !== cat.id ? 'ring-2 ring-[var(--accent)]' : ''
             }`}
           >
@@ -140,6 +140,9 @@ export default function CategoryTabs({
                         <Trash2 size={12} />
                       </button>
                     )}
+                    <span className="text-[var(--text-faint)]" title="Glisser pour réordonner">
+                      <GripVertical size={12} />
+                    </span>
                   </span>
                 )}
               </>
