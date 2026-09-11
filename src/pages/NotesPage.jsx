@@ -106,6 +106,19 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
     handleEditorInput()
   }
 
+  // formatBlock only ever applies h2 — it has no "undo" of its own, so toggling
+  // back to a plain paragraph needs an explicit check of the current block.
+  function toggleHeading() {
+    if (!editorRef.current) return
+    editorRef.current.focus()
+    const anchor = window.getSelection()?.anchorNode
+    const el = anchor && anchor.nodeType === Node.TEXT_NODE ? anchor.parentElement : anchor
+    const heading = el?.closest?.('h2')
+    const isHeading = heading && editorRef.current.contains(heading)
+    document.execCommand('formatBlock', false, isHeading ? 'p' : 'h2')
+    handleEditorInput()
+  }
+
   function handleEditorKeyDown(e) {
     if (e.key === 'Enter') {
       e.preventDefault()
@@ -288,9 +301,9 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => format('formatBlock', 'h2')}
+                onClick={toggleHeading}
                 aria-label="Titre"
-                title="Titre"
+                title="Titre (cliquer à nouveau pour retirer)"
                 className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
               >
                 <Heading2 size={15} />

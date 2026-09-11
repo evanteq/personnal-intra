@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, CircleCheck, GripVertical, Link2, ListTodo, Newspaper, NotebookPen, Sparkles, X } from 'lucide-react'
+import { ArrowRight, CircleCheck, GripVertical, Link2, ListTodo, Newspaper, NotebookPen, X } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { useDailyNews } from '../hooks/useDailyNews'
 import { DEFAULT_CATEGORIES, DEFAULT_LINKS, DEFAULT_NOTES, DEFAULT_TODOS } from '../data/defaultData'
 import { getIcon } from '../data/iconOptions'
 import { getFaviconUrl } from '../utils/favicon'
-import { stripHtml } from '../utils/html'
+import { startOfWeek } from '../utils/date'
 import TimezoneBanner from '../components/dashboard/TimezoneBanner'
 import QuickLinkPicker from '../components/dashboard/QuickLinkPicker'
-
-const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 const QUICK_LINK_COUNT = 25
 
@@ -55,17 +53,100 @@ function SectionCard({ title, onSeeAll, children, className = '' }) {
     <div className={`glass glass-shadow rounded-2xl p-4 flex flex-col gap-2 min-h-0 h-full ${className}`}>
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
-        <button
-          type="button"
-          onClick={onSeeAll}
-          className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--accent)]"
-        >
-          Voir tout
-          <ArrowRight size={12} />
-        </button>
+        {onSeeAll && (
+          <button
+            type="button"
+            onClick={onSeeAll}
+            className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--accent)]"
+          >
+            Voir tout
+            <ArrowRight size={12} />
+          </button>
+        )}
       </div>
       {children}
     </div>
+  )
+}
+
+const TASK_THEME = {
+  todo: '#94a3b8',
+  doing: '#f59e0b',
+  done: '#10b981',
+}
+
+function ProgressBar({ label, percent, color }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-[var(--text-secondary)]">{label}</span>
+        <span className="text-[var(--text-faint)] tabular-nums">{Math.round(percent)}%</span>
+      </div>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--surface-bg)' }}>
+        <div
+          className="h-full rounded-full transition-[width] duration-500"
+          style={{ width: `${Math.min(100, Math.max(0, percent))}%`, backgroundColor: color }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function TasksProgress({ todoCount, doingCount, doneCount }) {
+  const total = todoCount + doingCount + doneCount
+  const segments = [
+    { label: 'À faire', value: todoCount, color: TASK_THEME.todo },
+    { label: 'En cours', value: doingCount, color: TASK_THEME.doing },
+    { label: 'Terminé', value: doneCount, color: TASK_THEME.done },
+  ]
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-[var(--text-secondary)]">Tâches</span>
+        <span className="text-[var(--text-faint)] tabular-nums">
+          {total > 0 ? Math.round((doneCount / total) * 100) : 0}% terminé
+        </span>
+      </div>
+      <div className="flex h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--surface-bg)' }}>
+        {total === 0
+          ? null
+          : segments.map((seg, i) => (
+              <div key={i} style={{ width: `${(seg.value / total) * 100}%`, backgroundColor: seg.color }} />
+            ))}
+      </div>
+      <div className="flex items-center gap-3 flex-wrap">
+        {segments.map((seg, i) => (
+          <span key={i} className="flex items-center gap-1 text-[10px] text-[var(--text-faint)]">
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: seg.color }} />
+            {seg.label} · {seg.value}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ProgressCard({ todoCount, doingCount, doneCount }) {
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const dayStart = new Date(now)
+  dayStart.setHours(0, 0, 0, 0)
+  const dayPercent = ((now - dayStart) / 86400000) * 100
+  const weekPercent = ((now - startOfWeek(now)) / (7 * 86400000)) * 100
+
+  return (
+    <SectionCard title="Progression" className="flex-1">
+      <div className="flex flex-col gap-4">
+        <TasksProgress todoCount={todoCount} doingCount={doingCount} doneCount={doneCount} />
+        <ProgressBar label="Journée écoulée" percent={dayPercent} color="var(--accent)" />
+        <ProgressBar label="Semaine écoulée" percent={weekPercent} color="var(--accent)" />
+      </div>
+    </SectionCard>
   )
 }
 
@@ -136,12 +217,6 @@ export default function Dashboard({ onNavigate }) {
   const todoCount = todos.filter((t) => t.status === 'todo').length
   const doingCount = todos.filter((t) => t.status === 'doing').length
   const doneCount = todos.filter((t) => t.status === 'done').length
-  const latestNote = [...notes].sort((a, b) => b.updatedAt - a.updatedAt)[0]
-
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-  const recentlyCompleted = todos
-    .filter((t) => t.status === 'done' && t.completedAt && t.completedAt >= weekAgo)
-    .sort((a, b) => b.completedAt - a.completedAt)
 
   // Drop dangling references if a pinned shortcut was deleted elsewhere.
   useEffect(() => {
@@ -303,45 +378,8 @@ export default function Dashboard({ onNavigate }) {
         </SectionCard>
 
         <div className="flex flex-col gap-3 min-h-0">
-          <SectionCard title="Dernière note" onSeeAll={() => onNavigate('notes')} className="flex-1">
-            {latestNote ? (
-              <div className="flex-1 min-h-0 flex flex-col">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-[var(--text-primary)]">{latestNote.title || 'Sans titre'}</p>
-                  <span className="text-[11px] text-[var(--text-faint)] shrink-0 ml-2">
-                    {dateFormatter.format(latestNote.updatedAt)}
-                  </span>
-                </div>
-                <p className="text-sm text-[var(--text-muted)] mt-2 whitespace-pre-wrap line-clamp-[10] overflow-hidden">
-                  {stripHtml(latestNote.content) || 'Note vide.'}
-                </p>
-              </div>
-            ) : (
-              <p className="text-xs text-[var(--text-faint)] text-center py-4">Aucune note pour le moment</p>
-            )}
-          </SectionCard>
-
+          <ProgressCard todoCount={todoCount} doingCount={doingCount} doneCount={doneCount} />
           <NewsCard />
-
-          <div className="glass glass-shadow rounded-2xl p-4 flex flex-col gap-2 shrink-0">
-            <div className="flex items-center gap-2">
-              <Sparkles size={15} className="text-[var(--accent)]" />
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Activité</h3>
-            </div>
-            <p className="text-xl font-semibold text-[var(--text-primary)] leading-none">
-              {recentlyCompleted.length}
-              <span className="text-xs font-normal text-[var(--text-muted)] ml-1.5">tâche(s) terminée(s) cette semaine</span>
-            </p>
-            {recentlyCompleted.length > 0 && (
-              <ul className="flex flex-col gap-1 mt-1">
-                {recentlyCompleted.slice(0, 3).map((t) => (
-                  <li key={t.id} className="text-xs text-[var(--text-muted)] truncate">
-                    · {t.text}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </div>
       </div>
 
