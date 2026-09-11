@@ -112,17 +112,22 @@ function MiniMonth({ year, month, todos, fadingIds, todayKey, schoolWeeks, holid
           return (
             <span
               key={key}
-              className={`relative text-[9px] text-center rounded py-0.5 ${
-                isToday
-                  ? 'font-bold text-[var(--accent)]'
-                  : inMonth
-                    ? 'text-[var(--text-secondary)]'
-                    : 'text-[var(--text-faint)] opacity-40'
-              } ${isWeekend && inMonth ? 'day-weekend' : ''} ${isSchoolDay(key) && inMonth ? 'day-school' : ''} ${
-                holidayKeys.has(key) && inMonth ? 'day-holiday' : ''
-              }`}
+              className={`relative flex items-center justify-center py-0.5 rounded ${
+                isWeekend && inMonth ? 'day-weekend' : ''
+              } ${isSchoolDay(key) && inMonth ? 'day-school' : ''} ${holidayKeys.has(key) && inMonth ? 'day-holiday' : ''}`}
             >
-              {d.getDate()}
+              <span
+                className={`flex items-center justify-center text-[9px] ${
+                  isToday
+                    ? 'w-3.5 h-3.5 rounded-full font-bold text-white'
+                    : inMonth
+                      ? 'text-[var(--text-secondary)]'
+                      : 'text-[var(--text-faint)] opacity-40'
+                }`}
+                style={isToday ? { backgroundColor: 'var(--accent)' } : undefined}
+              >
+                {d.getDate()}
+              </span>
               {hasTasks(key) && (
                 <span
                   className="absolute left-1/2 -translate-x-1/2 bottom-0 w-1 h-1 rounded-full"
@@ -405,13 +410,18 @@ export default function PlanningPage() {
                     }}
                     className={`glass rounded-xl p-2 flex flex-col gap-1.5 min-h-0 transition-colors ${
                       isOver ? 'ring-2 ring-[var(--accent)]' : ''
-                    } ${isWeekend ? 'day-weekend' : ''} ${isSchoolDay(key) ? 'day-school' : ''} ${
-                      holidayKeys.has(key) ? 'day-holiday' : ''
-                    } ${!inMonth ? 'opacity-40' : ''}`}
+                    } ${isToday ? 'ring-2 ring-[var(--accent)]' : ''} ${isWeekend ? 'day-weekend' : ''} ${
+                      isSchoolDay(key) ? 'day-school' : ''
+                    } ${holidayKeys.has(key) ? 'day-holiday' : ''} ${!inMonth ? 'opacity-40' : ''}`}
                     title={holidayLabel(key)}
                   >
                     <span
-                      className={`text-[11px] font-semibold shrink-0 ${isToday ? 'text-[var(--accent)]' : 'text-[var(--text-faint)]'}`}
+                      className={`flex items-center justify-center shrink-0 text-[11px] ${
+                        isToday
+                          ? 'w-5 h-5 rounded-full font-bold text-white'
+                          : 'text-[var(--text-faint)]'
+                      }`}
+                      style={isToday ? { backgroundColor: 'var(--accent)' } : undefined}
                     >
                       {day.getDate()}
                     </span>
@@ -450,10 +460,12 @@ export default function PlanningPage() {
                   }}
                   className={`glass glass-shadow rounded-2xl p-2.5 flex flex-col gap-2 h-full min-h-0 transition-colors ${
                     isOver ? 'ring-2 ring-[var(--accent)]' : ''
-                  } ${isSchoolDay(key) ? 'day-school' : ''} ${holidayKeys.has(key) ? 'day-holiday' : ''}`}
+                  } ${isToday ? 'ring-2 ring-[var(--accent)]' : ''} ${isSchoolDay(key) ? 'day-school' : ''} ${
+                    holidayKeys.has(key) ? 'day-holiday' : ''
+                  }`}
                   title={holidayLabel(key)}
                 >
-                  <div className="flex items-baseline justify-between shrink-0">
+                  <div className="flex items-center justify-between shrink-0">
                     <span
                       className={`text-xs font-semibold capitalize ${
                         isToday ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'
@@ -461,7 +473,12 @@ export default function PlanningPage() {
                     >
                       {dayNameFormatter.format(day)}
                     </span>
-                    <span className={`text-[11px] ${isToday ? 'text-[var(--accent)]' : 'text-[var(--text-faint)]'}`}>
+                    <span
+                      className={`flex items-center justify-center text-[11px] ${
+                        isToday ? 'w-5 h-5 rounded-full font-bold text-white' : 'text-[var(--text-faint)]'
+                      }`}
+                      style={isToday ? { backgroundColor: 'var(--accent)' } : undefined}
+                    >
                       {day.getDate()}
                     </span>
                   </div>
