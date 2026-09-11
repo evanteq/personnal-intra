@@ -45,9 +45,19 @@ function AppShell() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  const isDark = settings.theme !== 'light'
+  const orbBlend = isDark ? 'black' : 'white'
+  const arcBlend = isDark ? 'white' : 'black'
+
   const backgroundStyle =
     settings.background.type === 'default'
-      ? { backgroundImage: 'radial-gradient(circle at 20% 20%, var(--bg-from) 0%, var(--bg-via) 55%, var(--bg-to) 100%)' }
+      ? {
+          backgroundImage: [
+            `radial-gradient(80vmax circle at 22% 128%, transparent 54.5%, color-mix(in srgb, var(--accent) 55%, ${arcBlend}) 56%, transparent 57.5%)`,
+            `radial-gradient(ellipse 62% 52% at 74% 20%, color-mix(in srgb, var(--accent) 80%, ${orbBlend}) 0%, transparent 70%)`,
+            'radial-gradient(circle at 20% 20%, var(--bg-from) 0%, var(--bg-via) 55%, var(--bg-to) 100%)',
+          ].join(', '),
+        }
       : { backgroundImage: `url(${settings.background.value})` }
 
   const ActivePage = PAGES[page] ?? Dashboard
