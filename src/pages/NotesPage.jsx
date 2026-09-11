@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bold, Eye, Heading2, Italic, List, NotebookPen, Pencil, Plus, Tag, Trash2, X } from 'lucide-react'
+import { Bold, Heading2, Italic, List, NotebookPen, Plus, Tag, Trash2, X } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DEFAULT_NOTES } from '../data/defaultData'
 import { uid } from '../utils/id'
-import { renderMarkdown } from '../utils/markdown'
+import { stripHtml } from '../utils/html'
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
@@ -19,8 +19,7 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [activeTag, setActiveTag] = useState(null)
   const [tagDraft, setTagDraft] = useState('')
-  const [previewMode, setPreviewMode] = useState(false)
-  const textareaRef = useRef(null)
+  const editorRef = useRef(null)
 
   useEffect(() => {
     if (openTarget?.type !== 'note') return
@@ -50,11 +49,16 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
     }
   }, [notes, selectedId])
 
-  useEffect(() => {
-    setPreviewMode(false)
-  }, [selectedId])
-
   const selected = notes.find((n) => n.id === selectedId) ?? null
+
+  // The editable area is uncontrolled (to keep the caret stable while typing);
+  // only push note.content into it when switching to a different note.
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.dataset.noteId !== selectedId) {
+      editorRef.current.innerHTML = selected?.content || ''
+      editorRef.current.dataset.noteId = selectedId || ''
+    }
+  }, [selectedId, selected?.content])
 
   const allTags = [...new Set(notes.flatMap((n) => n.tags || []))].sort()
   const visibleNotes = activeTag ? notes.filter((n) => (n.tags || []).includes(activeTag)) : notes
@@ -69,6 +73,26 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch, updatedAt: Date.now() } : n)))
   }
 
+  function handleEditorInput() {
+    if (!selected || !editorRef.current) return
+    updateNote(selected.id, { content: editorRef.current.innerHTML })
+  }
+
+  function format(command, value) {
+    if (!editorRef.current) return
+    editorRef.current.focus()
+    document.execCommand(command, false, value)
+    handleEditorInput()
+  }
+
+  function handleEditorKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      document.execCommand(e.shiftKey ? 'insertLineBreak' : 'insertParagraph')
+      handleEditorInput()
+    }
+  }
+
   function addTag(id, tag) {
     const clean = tag.trim().toLowerCase()
     if (!clean) return
@@ -81,34 +105,6 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
     const note = notes.find((n) => n.id === id)
     if (!note) return
     updateNote(id, { tags: (note.tags || []).filter((t) => t !== tag) })
-  }
-
-  function wrapSelection(before, after = before) {
-    const el = textareaRef.current
-    if (!el || !selected) return
-    const { selectionStart, selectionEnd, value } = el
-    const chunk = value.slice(selectionStart, selectionEnd)
-    const nextValue = value.slice(0, selectionStart) + before + chunk + after + value.slice(selectionEnd)
-    updateNote(selected.id, { content: nextValue })
-    requestAnimationFrame(() => {
-      el.focus()
-      el.selectionStart = selectionStart + before.length
-      el.selectionEnd = selectionStart + before.length + chunk.length
-    })
-  }
-
-  function prefixLine(prefix) {
-    const el = textareaRef.current
-    if (!el || !selected) return
-    const { selectionStart, value } = el
-    const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1
-    const nextValue = value.slice(0, lineStart) + prefix + value.slice(lineStart)
-    updateNote(selected.id, { content: nextValue })
-    requestAnimationFrame(() => {
-      el.focus()
-      const pos = selectionStart + prefix.length
-      el.selectionStart = el.selectionEnd = pos
-    })
   }
 
   function deleteNote(id) {
@@ -158,6 +154,7 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
           {visibleNotes.map((note) => {
             const active = note.id === selectedId
             const confirming = confirmingId === note.id
+            const preview = stripHtml(note.content)
             return (
               <li key={note.id}>
                 <button
@@ -171,9 +168,7 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-[var(--text-primary)] truncate">{note.title || 'Sans titre'}</p>
-                      <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">
-                        {note.content ? note.content.slice(0, 60) : 'Note vide'}
-                      </p>
+                      <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">{preview ? preview.slice(0, 60) : 'Note vide'}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <p className="text-[10px] text-[var(--text-faint)]">{dateFormatter.format(note.updatedAt)}</p>
                         {(note.tags || []).length > 0 && (
@@ -217,23 +212,12 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
       <div className="glass glass-shadow rounded-2xl p-5 flex flex-col gap-3 min-h-0">
         {selected ? (
           <>
-            <div className="flex items-center gap-2">
-              <input
-                value={selected.title}
-                onChange={(e) => updateNote(selected.id, { title: e.target.value })}
-                placeholder="Titre de la note"
-                className="flex-1 min-w-0 bg-transparent outline-none text-lg font-semibold text-[var(--text-primary)] placeholder:text-[var(--text-faint)]"
-              />
-              <button
-                type="button"
-                onClick={() => setPreviewMode((p) => !p)}
-                className="shrink-0 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
-                style={previewMode ? { backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' } : undefined}
-              >
-                {previewMode ? <Pencil size={13} /> : <Eye size={13} />}
-                {previewMode ? 'Éditer' : 'Aperçu'}
-              </button>
-            </div>
+            <input
+              value={selected.title}
+              onChange={(e) => updateNote(selected.id, { title: e.target.value })}
+              placeholder="Titre de la note"
+              className="w-full bg-transparent outline-none text-lg font-semibold text-[var(--text-primary)] placeholder:text-[var(--text-faint)]"
+            />
 
             <div className="flex flex-wrap items-center gap-1.5">
               {(selected.tags || []).map((tag) => (
@@ -268,60 +252,58 @@ export default function NotesPage({ openTarget, onOpenTargetHandled }) {
               />
             </div>
 
-            {previewMode ? (
-              <div
-                className="flex-1 w-full overflow-y-auto thin-scroll rounded-xl bg-[var(--surface-bg)] border border-[var(--surface-border)] p-4 text-sm text-[var(--text-primary)] [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_h4]:text-sm [&_h4]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_p]:mb-1 [&_strong]:font-semibold"
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(selected.content) || '<p class="text-[var(--text-faint)]">Note vide.</p>' }}
-              />
-            ) : (
-              <>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => prefixLine('## ')}
-                    aria-label="Titre"
-                    title="Titre"
-                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
-                  >
-                    <Heading2 size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => wrapSelection('**')}
-                    aria-label="Gras"
-                    title="Gras"
-                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
-                  >
-                    <Bold size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => wrapSelection('*')}
-                    aria-label="Italique"
-                    title="Italique"
-                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
-                  >
-                    <Italic size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => prefixLine('- ')}
-                    aria-label="Liste à puces"
-                    title="Liste à puces"
-                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
-                  >
-                    <List size={15} />
-                  </button>
-                </div>
-                <textarea
-                  ref={textareaRef}
-                  value={selected.content}
-                  onChange={(e) => updateNote(selected.id, { content: e.target.value })}
-                  placeholder="Écrivez ici… (# titre, **gras**, *italique*, - liste)"
-                  className="flex-1 w-full resize-none rounded-xl bg-[var(--surface-bg)] border border-[var(--surface-border)] p-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] thin-scroll"
-                />
-              </>
-            )}
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => format('formatBlock', 'h2')}
+                aria-label="Titre"
+                title="Titre"
+                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
+              >
+                <Heading2 size={15} />
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => format('bold')}
+                aria-label="Gras"
+                title="Gras"
+                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
+              >
+                <Bold size={15} />
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => format('italic')}
+                aria-label="Italique"
+                title="Italique"
+                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
+              >
+                <Italic size={15} />
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => format('insertUnorderedList')}
+                aria-label="Liste à puces"
+                title="Liste à puces"
+                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
+              >
+                <List size={15} />
+              </button>
+            </div>
+
+            <div
+              ref={editorRef}
+              contentEditable
+              suppressContentEditableWarning
+              onInput={handleEditorInput}
+              onKeyDown={handleEditorKeyDown}
+              data-placeholder="Écrivez ici…"
+              className="flex-1 w-full overflow-y-auto thin-scroll rounded-xl bg-[var(--surface-bg)] border border-[var(--surface-border)] p-4 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] [&_h2]:text-lg [&_h2]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_strong]:font-semibold empty:before:content-[attr(data-placeholder)] empty:before:text-[var(--text-faint)]"
+            />
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center gap-3 text-[var(--text-faint)]">

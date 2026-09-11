@@ -5,6 +5,7 @@ import { useTodos } from '../../hooks/useTodos'
 import { DEFAULT_CATEGORIES, DEFAULT_LINKS, DEFAULT_NOTES } from '../../data/defaultData'
 import { getIcon } from '../../data/iconOptions'
 import { getFaviconUrl } from '../../utils/favicon'
+import { stripHtml } from '../../utils/html'
 
 const MAX_PER_GROUP = 5
 
@@ -38,7 +39,7 @@ export default function GlobalSearch({ open, onClose, onSelect }) {
   const matchedLinks = q ? links.filter((l) => l.title.toLowerCase().includes(q)).slice(0, MAX_PER_GROUP) : []
   const matchedNotes = q
     ? notes
-        .filter((n) => (n.title || '').toLowerCase().includes(q) || (n.content || '').toLowerCase().includes(q))
+        .filter((n) => (n.title || '').toLowerCase().includes(q) || stripHtml(n.content).toLowerCase().includes(q))
         .slice(0, MAX_PER_GROUP)
     : []
   const matchedTodos = q ? todos.filter((t) => t.text.toLowerCase().includes(q)).slice(0, MAX_PER_GROUP) : []
@@ -131,7 +132,7 @@ export default function GlobalSearch({ open, onClose, onSelect }) {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm text-[var(--text-primary)] truncate">{note.title || 'Sans titre'}</p>
-                    <p className="text-[11px] text-[var(--text-faint)] truncate">{note.content?.slice(0, 60)}</p>
+                    <p className="text-[11px] text-[var(--text-faint)] truncate">{stripHtml(note.content).slice(0, 60)}</p>
                   </div>
                 </button>
               ))}

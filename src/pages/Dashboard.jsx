@@ -4,6 +4,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DEFAULT_CATEGORIES, DEFAULT_LINKS, DEFAULT_NOTES, DEFAULT_TODOS } from '../data/defaultData'
 import { getIcon } from '../data/iconOptions'
 import { getFaviconUrl } from '../utils/favicon'
+import { stripHtml } from '../utils/html'
 import TimezoneBanner from '../components/dashboard/TimezoneBanner'
 import QuickLinkPicker from '../components/dashboard/QuickLinkPicker'
 
@@ -243,7 +244,7 @@ export default function Dashboard({ onNavigate }) {
                   </span>
                 </div>
                 <p className="text-sm text-[var(--text-muted)] mt-2 whitespace-pre-wrap line-clamp-[10] overflow-hidden">
-                  {latestNote.content || 'Note vide.'}
+                  {stripHtml(latestNote.content) || 'Note vide.'}
                 </p>
               </div>
             ) : (

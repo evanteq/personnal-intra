@@ -6,6 +6,7 @@ export default function CategoryTabs({ categories, activeId, onSelect, onAddCate
   const [draft, setDraft] = useState('')
   const [addingNew, setAddingNew] = useState(false)
   const [newDraft, setNewDraft] = useState('')
+  const [editMode, setEditMode] = useState(false)
 
   function startEdit(cat) {
     setEditingId(cat.id)
@@ -34,7 +35,7 @@ export default function CategoryTabs({ categories, activeId, onSelect, onAddCate
         return (
           <div
             key={cat.id}
-            className={`group flex items-center gap-1.5 px-3 py-2.5 -mb-px text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-2.5 -mb-px text-sm font-medium border-b-2 transition-colors ${
               isActive
                 ? 'border-[var(--accent)] text-[var(--text-primary)]'
                 : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -62,28 +63,30 @@ export default function CategoryTabs({ categories, activeId, onSelect, onAddCate
             ) : (
               <>
                 <button onClick={() => onSelect(cat.id)}>{cat.name}</button>
-                <span className="hidden group-hover:flex items-center gap-1 ml-1">
-                  <button
-                    onClick={() => startEdit(cat)}
-                    aria-label={`Renommer ${cat.name}`}
-                    className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                  >
-                    <Pencil size={12} />
-                  </button>
-                  {categories.length > 1 && (
+                {editMode && (
+                  <span className="flex items-center gap-1 ml-1">
                     <button
-                      onClick={() => {
-                        if (window.confirm(`Supprimer la catégorie "${cat.name}" et ses liens ?`)) {
-                          onDeleteCategory(cat.id)
-                        }
-                      }}
-                      aria-label={`Supprimer ${cat.name}`}
-                      className="text-[var(--text-muted)] hover:text-red-500"
+                      onClick={() => startEdit(cat)}
+                      aria-label={`Renommer ${cat.name}`}
+                      className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                     >
-                      <Trash2 size={12} />
+                      <Pencil size={12} />
                     </button>
-                  )}
-                </span>
+                    {categories.length > 1 && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Supprimer la catégorie "${cat.name}" et ses liens ?`)) {
+                            onDeleteCategory(cat.id)
+                          }
+                        }}
+                        aria-label={`Supprimer ${cat.name}`}
+                        className="text-[var(--text-muted)] hover:text-red-500"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </span>
+                )}
               </>
             )}
           </div>
@@ -119,6 +122,20 @@ export default function CategoryTabs({ categories, activeId, onSelect, onAddCate
           Catégorie
         </button>
       )}
+
+      <button
+        onClick={() => {
+          setEditMode((v) => !v)
+          setEditingId(null)
+        }}
+        aria-label={editMode ? 'Terminer la modification des catégories' : 'Modifier les catégories'}
+        title={editMode ? 'Terminer' : 'Modifier les catégories'}
+        className={`flex items-center gap-1 px-2.5 py-2.5 -mb-px ml-auto text-sm border-b-2 border-transparent transition-colors ${
+          editMode ? 'text-[var(--accent)]' : 'text-[var(--text-faint)] hover:text-[var(--text-primary)]'
+        }`}
+      >
+        {editMode ? <Check size={14} /> : <Pencil size={14} />}
+      </button>
     </div>
   )
 }
