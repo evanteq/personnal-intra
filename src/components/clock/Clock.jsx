@@ -12,12 +12,20 @@ export default function Clock() {
     return () => clearInterval(timer)
   }, [])
 
+  const seconds = now.getSeconds()
+
   return (
-    <span className="flex items-baseline font-semibold tracking-tight tabular-nums text-[var(--text-primary)]">
-      <span className="text-3xl md:text-4xl">
-        {pad(now.getHours())}:{pad(now.getMinutes())}
+    <div className="flex items-baseline gap-2">
+      <span
+        className="w-2 h-2 rounded-full shrink-0 self-center transition-opacity duration-300"
+        style={{ backgroundColor: 'var(--accent)', opacity: seconds % 2 === 0 ? 1 : 0.3 }}
+      />
+      <span className="flex items-baseline font-bold tracking-tight tabular-nums">
+        <span className="text-3xl md:text-4xl bg-gradient-to-br from-[var(--text-primary)] to-[var(--accent)] bg-clip-text text-transparent">
+          {pad(now.getHours())}:{pad(now.getMinutes())}
+        </span>
+        <span className="text-base md:text-lg text-[var(--text-faint)] ml-1">:{pad(seconds)}</span>
       </span>
-      <span className="text-lg md:text-xl opacity-40 ml-0.5">:{pad(now.getSeconds())}</span>
-    </span>
+    </div>
   )
 }
