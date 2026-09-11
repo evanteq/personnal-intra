@@ -68,7 +68,7 @@ export default function TaskModal({ open, todo, onClose, onSave, onDelete }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl glass p-6 shadow-[var(--shadow-lg)]"
+        className="w-full max-w-lg rounded-2xl glass p-6 shadow-[var(--shadow-lg)]"
         style={{ backgroundColor: 'var(--modal-bg)' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -97,8 +97,8 @@ export default function TaskModal({ open, todo, onClose, onSave, onDelete }) {
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               placeholder="Détails de la tâche…"
-              rows={4}
-              className="w-full resize-none rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] thin-scroll"
+              rows={9}
+              className="w-full resize-y rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] thin-scroll"
             />
           </div>
 
