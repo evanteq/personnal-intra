@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Eye, NotebookPen, Pencil, Plus, Tag, Trash2, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Bold, Eye, Heading2, Italic, List, NotebookPen, Pencil, Plus, Tag, Trash2, X } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DEFAULT_NOTES } from '../data/defaultData'
 import { uid } from '../utils/id'
@@ -12,7 +12,7 @@ function normalizeNotes(raw) {
   return DEFAULT_NOTES
 }
 
-export default function NotesPage() {
+export default function NotesPage({ openTarget, onOpenTargetHandled }) {
   const [rawNotes, setNotes] = useLocalStorage('intra:notes', DEFAULT_NOTES)
   const notes = normalizeNotes(rawNotes)
   const [selectedId, setSelectedId] = useState(notes[0]?.id ?? null)
@@ -20,6 +20,16 @@ export default function NotesPage() {
   const [activeTag, setActiveTag] = useState(null)
   const [tagDraft, setTagDraft] = useState('')
   const [previewMode, setPreviewMode] = useState(false)
+  const textareaRef = useRef(null)
+
+  useEffect(() => {
+    if (openTarget?.type !== 'note') return
+    if (!notes.some((n) => n.id === openTarget.id)) return
+    setSelectedId(openTarget.id)
+    setActiveTag(null)
+    onOpenTargetHandled?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openTarget])
 
   // Legacy data (single string note) gets migrated to the array format once.
   useEffect(() => {
@@ -71,6 +81,34 @@ export default function NotesPage() {
     const note = notes.find((n) => n.id === id)
     if (!note) return
     updateNote(id, { tags: (note.tags || []).filter((t) => t !== tag) })
+  }
+
+  function wrapSelection(before, after = before) {
+    const el = textareaRef.current
+    if (!el || !selected) return
+    const { selectionStart, selectionEnd, value } = el
+    const chunk = value.slice(selectionStart, selectionEnd)
+    const nextValue = value.slice(0, selectionStart) + before + chunk + after + value.slice(selectionEnd)
+    updateNote(selected.id, { content: nextValue })
+    requestAnimationFrame(() => {
+      el.focus()
+      el.selectionStart = selectionStart + before.length
+      el.selectionEnd = selectionStart + before.length + chunk.length
+    })
+  }
+
+  function prefixLine(prefix) {
+    const el = textareaRef.current
+    if (!el || !selected) return
+    const { selectionStart, value } = el
+    const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1
+    const nextValue = value.slice(0, lineStart) + prefix + value.slice(lineStart)
+    updateNote(selected.id, { content: nextValue })
+    requestAnimationFrame(() => {
+      el.focus()
+      const pos = selectionStart + prefix.length
+      el.selectionStart = el.selectionEnd = pos
+    })
   }
 
   function deleteNote(id) {
@@ -236,12 +274,53 @@ export default function NotesPage() {
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(selected.content) || '<p class="text-[var(--text-faint)]">Note vide.</p>' }}
               />
             ) : (
-              <textarea
-                value={selected.content}
-                onChange={(e) => updateNote(selected.id, { content: e.target.value })}
-                placeholder="Écrivez ici… (# titre, **gras**, *italique*, - liste)"
-                className="flex-1 w-full resize-none rounded-xl bg-[var(--surface-bg)] border border-[var(--surface-border)] p-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] thin-scroll"
-              />
+              <>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => prefixLine('## ')}
+                    aria-label="Titre"
+                    title="Titre"
+                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
+                  >
+                    <Heading2 size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => wrapSelection('**')}
+                    aria-label="Gras"
+                    title="Gras"
+                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
+                  >
+                    <Bold size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => wrapSelection('*')}
+                    aria-label="Italique"
+                    title="Italique"
+                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
+                  >
+                    <Italic size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => prefixLine('- ')}
+                    aria-label="Liste à puces"
+                    title="Liste à puces"
+                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]"
+                  >
+                    <List size={15} />
+                  </button>
+                </div>
+                <textarea
+                  ref={textareaRef}
+                  value={selected.content}
+                  onChange={(e) => updateNote(selected.id, { content: e.target.value })}
+                  placeholder="Écrivez ici… (# titre, **gras**, *italique*, - liste)"
+                  className="flex-1 w-full resize-none rounded-xl bg-[var(--surface-bg)] border border-[var(--surface-border)] p-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] thin-scroll"
+                />
+              </>
             )}
           </>
         ) : (

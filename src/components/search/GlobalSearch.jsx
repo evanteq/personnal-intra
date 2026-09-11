@@ -8,7 +8,7 @@ import { getFaviconUrl } from '../../utils/favicon'
 
 const MAX_PER_GROUP = 5
 
-export default function GlobalSearch({ open, onClose, onNavigate }) {
+export default function GlobalSearch({ open, onClose, onSelect }) {
   const [query, setQuery] = useState('')
   const [links] = useLocalStorage('intra:links', DEFAULT_LINKS)
   const [categories] = useLocalStorage('intra:categories', DEFAULT_CATEGORIES)
@@ -44,8 +44,8 @@ export default function GlobalSearch({ open, onClose, onNavigate }) {
   const matchedTodos = q ? todos.filter((t) => t.text.toLowerCase().includes(q)).slice(0, MAX_PER_GROUP) : []
   const hasResults = matchedLinks.length > 0 || matchedNotes.length > 0 || matchedTodos.length > 0
 
-  function go(page) {
-    onNavigate(page)
+  function go(page, type, id) {
+    onSelect({ page, type, id })
     onClose()
   }
 
@@ -90,7 +90,7 @@ export default function GlobalSearch({ open, onClose, onNavigate }) {
                   <button
                     key={link.id}
                     type="button"
-                    onClick={() => go('shortcuts')}
+                    onClick={() => go('shortcuts', 'shortcut', link.id)}
                     className="w-full flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-[var(--surface-hover)] text-left"
                   >
                     <div
@@ -120,7 +120,7 @@ export default function GlobalSearch({ open, onClose, onNavigate }) {
                 <button
                   key={note.id}
                   type="button"
-                  onClick={() => go('notes')}
+                  onClick={() => go('notes', 'note', note.id)}
                   className="w-full flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-[var(--surface-hover)] text-left"
                 >
                   <div
@@ -145,7 +145,7 @@ export default function GlobalSearch({ open, onClose, onNavigate }) {
                 <button
                   key={todo.id}
                   type="button"
-                  onClick={() => go('todo')}
+                  onClick={() => go('todo', 'todo', todo.id)}
                   className="w-full flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-[var(--surface-hover)] text-left"
                 >
                   <div

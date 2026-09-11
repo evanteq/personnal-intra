@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DEFAULT_CATEGORIES, DEFAULT_LINKS } from '../data/defaultData'
 import { uid } from '../utils/id'
@@ -7,12 +7,25 @@ import CategoryTabs from '../components/shortcuts/CategoryTabs'
 import ShortcutGrid from '../components/shortcuts/ShortcutGrid'
 import LinkFormModal from '../components/shortcuts/LinkFormModal'
 
-export default function ShortcutsPage() {
+export default function ShortcutsPage({ openTarget, onOpenTargetHandled }) {
   const [categories, setCategories] = useLocalStorage('intra:categories', DEFAULT_CATEGORIES)
   const [links, setLinks] = useLocalStorage('intra:links', DEFAULT_LINKS)
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? '')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingLink, setEditingLink] = useState(null)
+  const [highlightId, setHighlightId] = useState(null)
+
+  useEffect(() => {
+    if (openTarget?.type !== 'shortcut') return
+    const link = links.find((l) => l.id === openTarget.id)
+    if (!link) return
+    setActiveCategory(link.categoryId)
+    setHighlightId(link.id)
+    onOpenTargetHandled?.()
+    const timer = setTimeout(() => setHighlightId(null), 2000)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openTarget])
 
   const currentCategoryId = categories.some((c) => c.id === activeCategory) ? activeCategory : categories[0]?.id
 
@@ -94,6 +107,7 @@ export default function ShortcutsPage() {
         onDelete={deleteLink}
         onReorder={reorderLinks}
         onAddClick={openCreateModal}
+        highlightId={highlightId}
       />
 
       <LinkFormModal

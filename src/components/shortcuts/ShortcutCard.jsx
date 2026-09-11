@@ -3,7 +3,7 @@ import { GripVertical, Pencil, Trash2 } from 'lucide-react'
 import { getIcon } from '../../data/iconOptions'
 import { getFaviconUrl } from '../../utils/favicon'
 
-export default function ShortcutCard({ link, onEdit, onDelete, dragHandlers, isDragOver }) {
+export default function ShortcutCard({ link, onEdit, onDelete, dragHandlers, isDragOver, isHighlighted }) {
   const [confirming, setConfirming] = useState(false)
   const [faviconFailed, setFaviconFailed] = useState(false)
   const Icon = getIcon(link.icon)
@@ -27,9 +27,9 @@ export default function ShortcutCard({ link, onEdit, onDelete, dragHandlers, isD
       rel="noopener noreferrer"
       draggable
       {...dragHandlers}
-      className={`group relative flex flex-col gap-3 rounded-2xl p-4 glass glass-hover shadow-[var(--shadow-sm)] animate-fade-in cursor-pointer ${
+      className={`group relative flex flex-col gap-3 rounded-2xl p-4 glass glass-hover shadow-[var(--shadow-sm)] animate-fade-in cursor-pointer transition-shadow ${
         isDragOver ? 'ring-2 ring-[var(--accent)]' : ''
-      }`}
+      } ${isHighlighted ? 'ring-2 ring-[var(--accent)]' : ''}`}
     >
       <div className="flex items-start justify-between">
         <div

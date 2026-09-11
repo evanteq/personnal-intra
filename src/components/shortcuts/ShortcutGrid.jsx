@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import ShortcutCard from './ShortcutCard'
 
-export default function ShortcutGrid({ links, onEdit, onDelete, onReorder, onAddClick }) {
+export default function ShortcutGrid({ links, onEdit, onDelete, onReorder, onAddClick, highlightId }) {
   const [dragId, setDragId] = useState(null)
   const [overId, setOverId] = useState(null)
 
@@ -23,6 +23,7 @@ export default function ShortcutGrid({ links, onEdit, onDelete, onReorder, onAdd
             link={link}
             onEdit={onEdit}
             onDelete={onDelete}
+            isHighlighted={highlightId === link.id}
             isDragOver={overId === link.id && dragId !== link.id}
             dragHandlers={{
               onDragStart: () => setDragId(link.id),

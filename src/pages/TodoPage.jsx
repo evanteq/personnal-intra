@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useTodos } from '../hooks/useTodos'
 import KanbanColumn from '../components/todo/KanbanColumn'
@@ -10,7 +10,7 @@ const COLUMNS = [
   { key: 'done', label: 'Terminé' },
 ]
 
-export default function TodoPage() {
+export default function TodoPage({ openTarget, onOpenTargetHandled }) {
   const { todos, addTodo, updateTodo, deleteTodo } = useTodos()
 
   const [draggedId, setDraggedId] = useState(null)
@@ -18,6 +18,16 @@ export default function TodoPage() {
   const [dragOverCardId, setDragOverCardId] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTodo, setEditingTodo] = useState(null)
+
+  useEffect(() => {
+    if (openTarget?.type !== 'todo') return
+    const todo = todos.find((t) => t.id === openTarget.id)
+    if (!todo) return
+    setEditingTodo(todo)
+    setModalOpen(true)
+    onOpenTargetHandled?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openTarget])
 
   function moveTodoTo(id, status) {
     updateTodo(id, { status })
