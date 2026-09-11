@@ -32,7 +32,7 @@ function Stat({ icon: Icon, value, label, theme = 'accent', delay = 0 }) {
   const { fg, bg } = STAT_THEMES[theme]
   return (
     <div
-      className="flex items-center gap-3 rounded-2xl p-3.5 flex-1 min-w-[150px] glass glass-hover animate-fade-in"
+      className="flex items-center gap-3 rounded-2xl p-3.5 flex-1 min-w-[150px] glass glass-shadow animate-fade-in"
       style={{ animationDelay: `${delay}ms`, animationFillMode: 'backwards' }}
     >
       <div

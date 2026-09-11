@@ -71,17 +71,12 @@ export default function CategoryTabs({
               setDragId(null)
               setOverId(null)
             }}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
-              isActive
-                ? 'text-[var(--accent)] shadow-[var(--shadow-sm)]'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
-            } ${editMode ? 'cursor-grab active:cursor-grabbing' : ''} ${
+            className={`flex items-center gap-1 rounded-xl transition-colors ${editMode ? 'cursor-grab active:cursor-grabbing' : ''} ${
               overId === cat.id && dragId !== cat.id ? 'ring-2 ring-[var(--accent)]' : ''
             }`}
-            style={isActive ? { backgroundColor: 'var(--accent-soft)' } : undefined}
           >
             {isEditing ? (
-              <>
+              <div className="flex items-center gap-1.5 px-3 py-2">
                 <input
                   autoFocus
                   value={draft}
@@ -98,10 +93,18 @@ export default function CategoryTabs({
                 <button onClick={() => setEditingId(null)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                   <X size={14} />
                 </button>
-              </>
+              </div>
             ) : (
               <>
-                <button onClick={() => onSelect(cat.id)} className="flex items-center gap-1.5">
+                <button
+                  onClick={() => onSelect(cat.id)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'text-[var(--accent)] shadow-[var(--shadow-sm)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)]'
+                  }`}
+                  style={isActive ? { backgroundColor: 'var(--accent-soft)' } : undefined}
+                >
                   {cat.name}
                   {count > 0 && (
                     <span
