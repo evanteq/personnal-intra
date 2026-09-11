@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { NotebookPen, Plus, Trash2 } from 'lucide-react'
+import { Eye, NotebookPen, Pencil, Plus, Tag, Trash2, X } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DEFAULT_NOTES } from '../data/defaultData'
 import { uid } from '../utils/id'
+import { renderMarkdown } from '../utils/markdown'
 
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 function normalizeNotes(raw) {
-  if (Array.isArray(raw)) return raw
+  if (Array.isArray(raw)) return raw.map((n) => ({ tags: [], ...n }))
   return DEFAULT_NOTES
 }
 
@@ -16,6 +17,9 @@ export default function NotesPage() {
   const notes = normalizeNotes(rawNotes)
   const [selectedId, setSelectedId] = useState(notes[0]?.id ?? null)
   const [confirmingId, setConfirmingId] = useState(null)
+  const [activeTag, setActiveTag] = useState(null)
+  const [tagDraft, setTagDraft] = useState('')
+  const [previewMode, setPreviewMode] = useState(false)
 
   // Legacy data (single string note) gets migrated to the array format once.
   useEffect(() => {
@@ -23,7 +27,7 @@ export default function NotesPage() {
       const legacyText = typeof rawNotes === 'string' ? rawNotes.trim() : ''
       setNotes(
         legacyText
-          ? [{ id: uid(), title: 'Note', content: legacyText, updatedAt: Date.now() }]
+          ? [{ id: uid(), title: 'Note', content: legacyText, tags: [], updatedAt: Date.now() }]
           : DEFAULT_NOTES,
       )
     }
@@ -36,16 +40,37 @@ export default function NotesPage() {
     }
   }, [notes, selectedId])
 
+  useEffect(() => {
+    setPreviewMode(false)
+  }, [selectedId])
+
   const selected = notes.find((n) => n.id === selectedId) ?? null
 
+  const allTags = [...new Set(notes.flatMap((n) => n.tags || []))].sort()
+  const visibleNotes = activeTag ? notes.filter((n) => (n.tags || []).includes(activeTag)) : notes
+
   function createNote() {
-    const note = { id: uid(), title: 'Nouvelle note', content: '', updatedAt: Date.now() }
+    const note = { id: uid(), title: 'Nouvelle note', content: '', tags: [], updatedAt: Date.now() }
     setNotes((prev) => [note, ...prev])
     setSelectedId(note.id)
   }
 
   function updateNote(id, patch) {
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch, updatedAt: Date.now() } : n)))
+  }
+
+  function addTag(id, tag) {
+    const clean = tag.trim().toLowerCase()
+    if (!clean) return
+    const note = notes.find((n) => n.id === id)
+    if (!note || (note.tags || []).includes(clean)) return
+    updateNote(id, { tags: [...(note.tags || []), clean] })
+  }
+
+  function removeTag(id, tag) {
+    const note = notes.find((n) => n.id === id)
+    if (!note) return
+    updateNote(id, { tags: (note.tags || []).filter((t) => t !== tag) })
   }
 
   function deleteNote(id) {
@@ -70,8 +95,29 @@ export default function NotesPage() {
           Nouvelle note
         </button>
 
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setActiveTag((t) => (t === tag ? null : tag))}
+                className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] transition-colors"
+                style={
+                  activeTag === tag
+                    ? { backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' }
+                    : { backgroundColor: 'var(--surface-bg)', color: 'var(--text-muted)' }
+                }
+              >
+                <Tag size={9} />
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+
         <ul className="flex flex-col gap-1.5 overflow-y-auto thin-scroll pr-1 mt-1">
-          {notes.map((note) => {
+          {visibleNotes.map((note) => {
             const active = note.id === selectedId
             const confirming = confirmingId === note.id
             return (
@@ -90,7 +136,14 @@ export default function NotesPage() {
                       <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">
                         {note.content ? note.content.slice(0, 60) : 'Note vide'}
                       </p>
-                      <p className="text-[10px] text-[var(--text-faint)] mt-1">{dateFormatter.format(note.updatedAt)}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[10px] text-[var(--text-faint)]">{dateFormatter.format(note.updatedAt)}</p>
+                        {(note.tags || []).length > 0 && (
+                          <p className="text-[10px] text-[var(--text-faint)] truncate">
+                            {note.tags.map((t) => `#${t}`).join(' ')}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <span
                       role="button"
@@ -117,24 +170,79 @@ export default function NotesPage() {
               </li>
             )
           })}
+          {visibleNotes.length === 0 && (
+            <p className="text-xs text-[var(--text-faint)] text-center py-4">Aucune note avec ce tag.</p>
+          )}
         </ul>
       </div>
 
       <div className="glass glass-shadow rounded-2xl p-5 flex flex-col gap-3 min-h-0">
         {selected ? (
           <>
-            <input
-              value={selected.title}
-              onChange={(e) => updateNote(selected.id, { title: e.target.value })}
-              placeholder="Titre de la note"
-              className="w-full bg-transparent outline-none text-lg font-semibold text-[var(--text-primary)] placeholder:text-[var(--text-faint)]"
-            />
-            <textarea
-              value={selected.content}
-              onChange={(e) => updateNote(selected.id, { content: e.target.value })}
-              placeholder="Écrivez ici…"
-              className="flex-1 w-full resize-none rounded-xl bg-[var(--surface-bg)] border border-[var(--surface-border)] p-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] thin-scroll"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                value={selected.title}
+                onChange={(e) => updateNote(selected.id, { title: e.target.value })}
+                placeholder="Titre de la note"
+                className="flex-1 min-w-0 bg-transparent outline-none text-lg font-semibold text-[var(--text-primary)] placeholder:text-[var(--text-faint)]"
+              />
+              <button
+                type="button"
+                onClick={() => setPreviewMode((p) => !p)}
+                className="shrink-0 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+                style={previewMode ? { backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' } : undefined}
+              >
+                {previewMode ? <Pencil size={13} /> : <Eye size={13} />}
+                {previewMode ? 'Éditer' : 'Aperçu'}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(selected.tags || []).map((tag) => (
+                <span
+                  key={tag}
+                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px]"
+                  style={{ backgroundColor: 'var(--surface-bg)', color: 'var(--text-muted)' }}
+                >
+                  #{tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(selected.id, tag)}
+                    aria-label={`Retirer le tag ${tag}`}
+                    className="hover:text-red-500"
+                  >
+                    <X size={10} />
+                  </button>
+                </span>
+              ))}
+              <input
+                value={tagDraft}
+                onChange={(e) => setTagDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault()
+                    addTag(selected.id, tagDraft)
+                    setTagDraft('')
+                  }
+                }}
+                placeholder="+ tag"
+                className="w-16 bg-transparent outline-none text-[11px] text-[var(--text-muted)] placeholder:text-[var(--text-faint)]"
+              />
+            </div>
+
+            {previewMode ? (
+              <div
+                className="flex-1 w-full overflow-y-auto thin-scroll rounded-xl bg-[var(--surface-bg)] border border-[var(--surface-border)] p-4 text-sm text-[var(--text-primary)] [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:text-base [&_h3]:font-semibold [&_h4]:text-sm [&_h4]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_p]:mb-1 [&_strong]:font-semibold"
+                dangerouslySetInnerHTML={{ __html: renderMarkdown(selected.content) || '<p class="text-[var(--text-faint)]">Note vide.</p>' }}
+              />
+            ) : (
+              <textarea
+                value={selected.content}
+                onChange={(e) => updateNote(selected.id, { content: e.target.value })}
+                placeholder="Écrivez ici… (# titre, **gras**, *italique*, - liste)"
+                className="flex-1 w-full resize-none rounded-xl bg-[var(--surface-bg)] border border-[var(--surface-border)] p-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-faint)] outline-none focus:border-[var(--accent)] thin-scroll"
+              />
+            )}
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center gap-3 text-[var(--text-faint)]">

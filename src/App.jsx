@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Monitor } from 'lucide-react'
 import { SettingsProvider, useSettings } from './context/SettingsContext'
 import { useLocalStorage } from './hooks/useLocalStorage'
@@ -6,6 +6,7 @@ import { useLocalStorage } from './hooks/useLocalStorage'
 import HeaderBar from './components/layout/HeaderBar'
 import NavSidebar from './components/layout/NavSidebar'
 import SettingsPanel from './components/settings/SettingsPanel'
+import GlobalSearch from './components/search/GlobalSearch'
 
 import Dashboard from './pages/Dashboard'
 import ShortcutsPage from './pages/ShortcutsPage'
@@ -25,6 +26,18 @@ function AppShell() {
   const { settings } = useSettings()
   const [page, setPage] = useLocalStorage('intra:page', 'dashboard')
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const backgroundStyle =
     settings.background.type === 'default'
@@ -48,7 +61,7 @@ function AppShell() {
       </div>
 
       <div className="hidden lg:flex relative z-10 h-full flex-col gap-4 p-4 md:p-6">
-        <HeaderBar onOpenSettings={() => setSettingsOpen(true)} />
+        <HeaderBar onOpenSettings={() => setSettingsOpen(true)} onOpenSearch={() => setSearchOpen(true)} />
 
         <div className="flex-1 flex flex-col md:flex-row gap-4 min-h-0">
           <NavSidebar page={page} onNavigate={setPage} />
@@ -59,6 +72,7 @@ function AppShell() {
       </div>
 
       <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} onNavigate={setPage} />
     </div>
   )
 }

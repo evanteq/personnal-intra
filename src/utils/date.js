@@ -24,3 +24,11 @@ export function addDays(date, n) {
   d.setDate(d.getDate() + n)
   return d
 }
+
+export function advanceDateKey(key, recur) {
+  const d = parseDateKey(key)
+  if (recur === 'daily') return toDateKey(addDays(d, 1))
+  if (recur === 'weekly') return toDateKey(addDays(d, 7))
+  if (recur === 'monthly') return toDateKey(new Date(d.getFullYear(), d.getMonth() + 1, d.getDate()))
+  return key
+}

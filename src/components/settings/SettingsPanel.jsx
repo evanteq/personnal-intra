@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Loader2, LocateFixed, Moon, RotateCcw, Search, Sun, X } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Download, Loader2, LocateFixed, Moon, RotateCcw, Search, Sun, Upload, X } from 'lucide-react'
 import { useSettings } from '../../context/SettingsContext'
 import AccentColorPicker from './AccentColorPicker'
 import BackgroundPicker from './BackgroundPicker'
@@ -10,6 +10,8 @@ export default function SettingsPanel({ open, onClose }) {
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
   const [confirmingReset, setConfirmingReset] = useState(false)
+  const [importError, setImportError] = useState('')
+  const fileInputRef = useRef(null)
 
   function handleReset() {
     if (!confirmingReset) {
@@ -21,6 +23,48 @@ export default function SettingsPanel({ open, onClose }) {
       .filter((key) => key.startsWith('intra:'))
       .forEach((key) => localStorage.removeItem(key))
     window.location.reload()
+  }
+
+  function handleExport() {
+    const data = {}
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith('intra:'))
+      .forEach((key) => {
+        try {
+          data[key] = JSON.parse(localStorage.getItem(key))
+        } catch {
+          data[key] = localStorage.getItem(key)
+        }
+      })
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `accueil-evan-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  function handleImportFile(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setImportError('')
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result)
+        const entries = Object.entries(data).filter(([key]) => key.startsWith('intra:'))
+        if (entries.length === 0) throw new Error('empty')
+        entries.forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)))
+        window.location.reload()
+      } catch {
+        setImportError('Fichier invalide — ce n’est pas une sauvegarde Accueil Evan.')
+      }
+    }
+    reader.readAsText(file)
   }
 
   async function handleSearch(e) {
@@ -162,8 +206,31 @@ export default function SettingsPanel({ open, onClose }) {
         <section className="flex flex-col gap-3 mt-8 pt-6 border-t border-[var(--surface-border)]">
           <h3 className="text-sm font-medium text-[var(--text-secondary)]">Données</h3>
           <p className="text-xs text-[var(--text-muted)]">
-            Raccourcis, notes, tâches et préférences sont stockés uniquement dans ce navigateur.
+            Raccourcis, notes, tâches et préférences sont stockés uniquement dans ce navigateur. Exportez une
+            sauvegarde régulièrement pour ne rien perdre en cas de changement de navigateur.
           </p>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleExport}
+              className="flex items-center gap-2 rounded-lg border border-[var(--surface-border)] bg-[var(--surface-bg)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+            >
+              <Download size={14} />
+              Exporter mes données
+            </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 rounded-lg border border-[var(--surface-border)] bg-[var(--surface-bg)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
+            >
+              <Upload size={14} />
+              Importer une sauvegarde
+            </button>
+            <input ref={fileInputRef} type="file" accept="application/json" onChange={handleImportFile} className="hidden" />
+          </div>
+          {importError && <p className="text-xs text-red-500">{importError}</p>}
+
           <button
             type="button"
             onClick={handleReset}

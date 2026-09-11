@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Repeat, X } from 'lucide-react'
 import { useTodos } from '../hooks/useTodos'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useMergedList } from '../hooks/useMergedList'
 import TaskModal from '../components/todo/TaskModal'
 import { DEFAULT_SCHOOL_WEEKS } from '../data/schoolWeeks'
 import { DEFAULT_PUBLIC_HOLIDAYS } from '../data/publicHolidays'
@@ -56,8 +57,9 @@ function TaskChip({ todo, fading, onOpen, onToggle, onUnschedule, onDragStart, o
         className="mt-0.5 shrink-0 accent-[var(--accent)]"
       />
       <span className="relative flex-1 min-w-0">
-        <span className={`block truncate ${checked && !fading ? 'line-through text-[var(--text-faint)]' : 'text-[var(--text-primary)]'}`}>
-          {todo.text}
+        <span className={`flex items-center gap-1 truncate ${checked && !fading ? 'line-through text-[var(--text-faint)]' : 'text-[var(--text-primary)]'}`}>
+          {todo.recur && <Repeat size={10} className="shrink-0 text-[var(--text-faint)]" />}
+          <span className="truncate">{todo.text}</span>
         </span>
         {fading && <span className="task-strike-line" />}
       </span>
@@ -144,8 +146,8 @@ export default function PlanningPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTodo, setEditingTodo] = useState(null)
   const [fadingIds, setFadingIds] = useState(() => new Set())
-  const [schoolWeeks] = useLocalStorage('intra:schoolWeeks', DEFAULT_SCHOOL_WEEKS)
-  const [publicHolidays] = useLocalStorage('intra:publicHolidays', DEFAULT_PUBLIC_HOLIDAYS)
+  const [schoolWeeks] = useMergedList('intra:schoolWeeks', DEFAULT_SCHOOL_WEEKS, 'start')
+  const [publicHolidays] = useMergedList('intra:publicHolidays', DEFAULT_PUBLIC_HOLIDAYS, 'date')
   const holidayKeys = useMemo(() => new Set(publicHolidays.map((h) => h.date)), [publicHolidays])
 
   const todayKey = toDateKey(new Date())

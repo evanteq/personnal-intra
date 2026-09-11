@@ -1,10 +1,11 @@
 import Clock from '../clock/Clock'
 import GreetingDate from './GreetingDate'
+import SearchButton from './SearchButton'
 import SettingsButton from './SettingsButton'
 import ThemeToggle from './ThemeToggle'
 import WeatherInline from './WeatherInline'
 
-export default function HeaderBar({ onOpenSettings }) {
+export default function HeaderBar({ onOpenSettings, onOpenSearch }) {
   return (
     <header className="glass glass-shadow rounded-2xl px-6 py-3 grid grid-cols-1 md:grid-cols-3 items-center gap-3 animate-fade-in">
       <div className="order-2 md:order-1 flex justify-center md:justify-start">
@@ -19,6 +20,7 @@ export default function HeaderBar({ onOpenSettings }) {
         <WeatherInline />
         <div className="w-px h-6 bg-[var(--surface-border)]" />
         <div className="flex items-center gap-1">
+          <SearchButton onClick={onOpenSearch} />
           <ThemeToggle />
           <SettingsButton onClick={onOpenSettings} />
         </div>

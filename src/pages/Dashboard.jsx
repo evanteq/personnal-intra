@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, CircleCheck, Link2, ListTodo, NotebookPen, X } from 'lucide-react'
+import { ArrowRight, CircleCheck, Link2, ListTodo, NotebookPen, Sparkles, X } from 'lucide-react'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DEFAULT_CATEGORIES, DEFAULT_LINKS, DEFAULT_NOTES, DEFAULT_TODOS } from '../data/defaultData'
 import { getIcon } from '../data/iconOptions'
@@ -72,6 +72,11 @@ export default function Dashboard({ onNavigate }) {
   const doingCount = todos.filter((t) => t.status === 'doing').length
   const doneCount = todos.filter((t) => t.status === 'done').length
   const latestNote = [...notes].sort((a, b) => b.updatedAt - a.updatedAt)[0]
+
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+  const recentlyCompleted = todos
+    .filter((t) => t.status === 'done' && t.completedAt && t.completedAt >= weekAgo)
+    .sort((a, b) => b.completedAt - a.completedAt)
 
   // Drop dangling references if a pinned shortcut was deleted elsewhere.
   useEffect(() => {
@@ -227,23 +232,45 @@ export default function Dashboard({ onNavigate }) {
           </div>
         </SectionCard>
 
-        <SectionCard title="Dernière note" onSeeAll={() => onNavigate('notes')}>
-          {latestNote ? (
-            <div className="flex-1 min-h-0 flex flex-col">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-[var(--text-primary)]">{latestNote.title || 'Sans titre'}</p>
-                <span className="text-[11px] text-[var(--text-faint)] shrink-0 ml-2">
-                  {dateFormatter.format(latestNote.updatedAt)}
-                </span>
+        <div className="flex flex-col gap-3 min-h-0">
+          <SectionCard title="Dernière note" onSeeAll={() => onNavigate('notes')} className="flex-1">
+            {latestNote ? (
+              <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-[var(--text-primary)]">{latestNote.title || 'Sans titre'}</p>
+                  <span className="text-[11px] text-[var(--text-faint)] shrink-0 ml-2">
+                    {dateFormatter.format(latestNote.updatedAt)}
+                  </span>
+                </div>
+                <p className="text-sm text-[var(--text-muted)] mt-2 whitespace-pre-wrap line-clamp-[10] overflow-hidden">
+                  {latestNote.content || 'Note vide.'}
+                </p>
               </div>
-              <p className="text-sm text-[var(--text-muted)] mt-2 whitespace-pre-wrap line-clamp-[10] overflow-hidden">
-                {latestNote.content || 'Note vide.'}
-              </p>
+            ) : (
+              <p className="text-xs text-[var(--text-faint)] text-center py-4">Aucune note pour le moment</p>
+            )}
+          </SectionCard>
+
+          <div className="glass glass-shadow rounded-2xl p-4 flex flex-col gap-2 shrink-0">
+            <div className="flex items-center gap-2">
+              <Sparkles size={15} className="text-[var(--accent)]" />
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Activité</h3>
             </div>
-          ) : (
-            <p className="text-xs text-[var(--text-faint)] text-center py-4">Aucune note pour le moment</p>
-          )}
-        </SectionCard>
+            <p className="text-xl font-semibold text-[var(--text-primary)] leading-none">
+              {recentlyCompleted.length}
+              <span className="text-xs font-normal text-[var(--text-muted)] ml-1.5">tâche(s) terminée(s) cette semaine</span>
+            </p>
+            {recentlyCompleted.length > 0 && (
+              <ul className="flex flex-col gap-1 mt-1">
+                {recentlyCompleted.slice(0, 3).map((t) => (
+                  <li key={t.id} className="text-xs text-[var(--text-muted)] truncate">
+                    · {t.text}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
 
       <QuickLinkPicker

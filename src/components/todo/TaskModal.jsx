@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Trash2, X } from 'lucide-react'
 
-const EMPTY = { text: '', description: '', dueDate: '' }
+const EMPTY = { text: '', description: '', dueDate: '', recur: '' }
+const RECUR_OPTIONS = [
+  { value: '', label: 'Aucune' },
+  { value: 'daily', label: 'Chaque jour' },
+  { value: 'weekly', label: 'Chaque semaine' },
+  { value: 'monthly', label: 'Chaque mois' },
+]
 const createdAtFormatter = new Intl.DateTimeFormat('fr-FR', {
   day: 'numeric',
   month: 'long',
@@ -16,7 +22,11 @@ export default function TaskModal({ open, todo, onClose, onSave, onDelete }) {
 
   useEffect(() => {
     if (open) {
-      setForm(todo ? { text: todo.text, description: todo.description || '', dueDate: todo.dueDate || '' } : EMPTY)
+      setForm(
+        todo
+          ? { text: todo.text, description: todo.description || '', dueDate: todo.dueDate || '', recur: todo.recur || '' }
+          : EMPTY,
+      )
       setConfirmingDelete(false)
     }
   }, [open, todo])
@@ -27,7 +37,7 @@ export default function TaskModal({ open, todo, onClose, onSave, onDelete }) {
     e.preventDefault()
     const text = form.text.trim()
     if (!text) return
-    onSave({ text, description: form.description.trim(), dueDate: form.dueDate || null })
+    onSave({ text, description: form.description.trim(), dueDate: form.dueDate || null, recur: form.recur || null })
   }
 
   function handleDelete() {
@@ -80,14 +90,31 @@ export default function TaskModal({ open, todo, onClose, onSave, onDelete }) {
             />
           </div>
 
-          <div>
-            <label className="block text-xs text-[var(--text-muted)] mb-1">Date assignée</label>
-            <input
-              type="date"
-              value={form.dueDate}
-              onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
-              className="w-full rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Date assignée</label>
+              <input
+                type="date"
+                value={form.dueDate}
+                onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+                className="w-full rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Répéter</label>
+              <select
+                value={form.recur}
+                onChange={(e) => setForm((f) => ({ ...f, recur: e.target.value }))}
+                disabled={!form.dueDate}
+                className="w-full rounded-lg bg-[var(--surface-bg)] border border-[var(--surface-border)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)] disabled:opacity-50"
+              >
+                {RECUR_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value} style={{ backgroundColor: 'var(--modal-bg)', color: 'var(--text-primary)' }}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {todo && (
